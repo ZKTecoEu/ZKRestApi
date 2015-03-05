@@ -1,0 +1,919 @@
+<?xml version="1.0" encoding="utf-8"?>
+<queries>
+
+    <query name="getEntityTree" >
+        <statement>
+
+<![CDATA[select eh.*
+		from entity_hierarchy eh
+		where not exists
+		( select 1
+		 from entity_group eg
+		 where eh.id_entity = eg._id
+		 and eg.id_type > 1
+		)
+		and eh.id_entity > 0
+	]]>
+        </statement>
+    </query>
+    <query name="getEntitiesForTree" >
+        <statement>
+
+<![CDATA[select _id as entity_id, name, 1 as type
+		from entity_group
+		union all
+		select _id as entity_id, COALESCE(first_name,'') || ' ' || COALESCE(last_name,''), 0 as type from employee
+	]]>
+        </statement>
+    </query>
+    <query name="newGetEntitiesForTree" >
+        <statement>
+
+<![CDATA[select vht.id_entity as _id, 
+    e.name, 
+    vht.id2 as id_parent, 
+    (select
+		(CASE WHEN id2 is null THEN 0
+		ELSE 1
+		END ) +
+		(CASE WHEN id3 is null THEN 0
+		ELSE 1
+		END ) +
+		(CASE WHEN id4 is null THEN 0
+		ELSE 1
+		END )+
+		(CASE WHEN id5 is null THEN 0
+		ELSE 1
+		END )+
+		(CASE WHEN id6 is null THEN 0
+		ELSE 1
+		END )
+	) as depz
+from view_hierarchy_tree vht,
+	(select _id, name, 1 as type
+	from entity_group
+	union all
+	select _id, COALESCE(first_name,'') || ' ' || COALESCE(last_name,''), 0 as type
+	from employee) e
+where e._id = vht.id_entity
+order by depz]]>
+        </statement>
+    </query>
+    <query name="getDepartmentTree" >
+        <statement>
+
+<![CDATA[select vht.id_entity as _id, 
+    e.name, 
+    vht.id2 as id_parent, 
+    (select
+		(CASE WHEN id2 is null THEN 0
+		ELSE 1
+		END ) +
+		(CASE WHEN id3 is null THEN 0
+		ELSE 1
+		END ) +
+		(CASE WHEN id4 is null THEN 0
+		ELSE 1
+		END )+
+		(CASE WHEN id5 is null THEN 0
+		ELSE 1
+		END )+
+		(CASE WHEN id6 is null THEN 0
+		ELSE 1
+		END )
+	) as depz
+from view_hierarchy_tree vht,
+	(select _id, name, 1 as type
+	from entity_group) e
+where e._id = vht.id_entity
+order by depz]]>
+        </statement>
+    </query>
+    <query name="getEmployeesForTree" >
+        <statement>
+
+<![CDATA[select e._id, e.name, type, h.id_parent, pin,  pwd, face, card, fp
+from entity_hierarchy h, 
+	(
+		select _id, name, 1 as type, null as pin, null as pwd, null as face, null as card, null as fp
+		from entity_group
+	union all
+		select distinct _id, COALESCE(first_name,'') || ' ' || COALESCE(last_name,''), 0 as type,  e.pin, elpwd.id_login,  elface.id_login, elcard.id_login, elfp.id_login
+		from employee e
+		left join employee_login elpwd on 
+			(
+			e._id = elpwd.id_employee 
+			and elpwd.id_login = 1
+			)
+		left join employee_login elface on 
+			(
+			e._id = elface.id_employee 
+			and elface.id_login = 4
+			)
+		left join employee_login elcard on 
+			(
+			e._id = elcard.id_employee 
+			and elcard.id_login = 3
+			)
+		left join employee_login elfp on 
+			(
+			e._id = elfp.id_employee 
+			and elfp.id_login = 2
+			)
+	) e
+where e._id = h.id_entity
+order by id_parent, _id]]>
+        </statement>
+    </query>
+    <query name="getUserCount" >
+        <statement>
+<![CDATA[select count(*) as num_employees from employee e, entity en where en._id = e._id and en.enabled = 1]]></statement>
+    </query>
+    <query name="getEmployeeById" >
+        <statement>
+
+<![CDATA[select * from employee where _id = ?_id]]>
+        </statement>
+    </query>
+    <query name="getDepartments" >
+        <statement>
+<![CDATA[SELECT entity_group._id, entity_group.name from entity inner join entity_group on (entity._id = entity_group._id) inner join entity_group_type on 				(entity_group.id_type)]]></statement>
+    </query>
+    <query name="getEmployees" >
+        <statement>
+<![CDATA[select e._id from employee e, entity en where e._id = en._id and en.enabled = 1]]></statement>
+    </query>
+    <query name="getMessagesOfEntity" >
+        <statement>
+
+<![CDATA[select pm.*, COALESCE(eSender.first_name,'') || ' ' || COALESCE(eSender.last_name,'') as src_name
+				from personal_message pm
+				left join employee eSender on eSender._id = pm.id_src
+				where 	 	pm.id_dest = ?_id
+					and ?cur_date between start_date and end_date
+			union all
+				select pm.*, COALESCE(eSender.first_name,'') || ' ' || COALESCE(eSender.last_name,'') as src_name
+				from view_hierarchy_tree h, personal_message pm
+				left join employee eSender on eSender._id = pm.id_src
+				where 		h.id_entity = ?_id
+					and	h.id2 = pm.id_dest
+					and ?cur_date between start_date and end_date
+			union all
+				select pm.*, COALESCE(eSender.first_name,'') || ' ' || COALESCE(eSender.last_name,'') as src_name
+				from view_hierarchy_tree h, personal_message pm
+				left join employee eSender on eSender._id = pm.id_src
+				where 		h.id_entity = ?_id
+					and	h.id3 = pm.id_dest
+					and ?cur_date between start_date and end_date
+			union all
+				select pm.*, COALESCE(eSender.first_name,'') || ' ' || COALESCE(eSender.last_name,'') as src_name
+				from view_hierarchy_tree h, personal_message pm
+				left join employee eSender on eSender._id = pm.id_src
+				where 		h.id_entity = ?_id
+					and	h.id4 = pm.id_dest
+					and ?cur_date between start_date and end_date
+			union all
+				select pm.*, COALESCE(eSender.first_name,'') || ' ' || COALESCE(eSender.last_name,'') as src_name
+				from view_hierarchy_tree h, personal_message pm
+				left join employee eSender on eSender._id = pm.id_src
+				where 		h.id_entity = ?_id
+					and	h.id5 = pm.id_dest
+					and ?cur_date between start_date and end_date
+			union all
+				select pm.*, COALESCE(eSender.first_name,'') || ' ' || COALESCE(eSender.last_name,'') as src_name
+				from view_hierarchy_tree h, personal_message pm
+				left join employee eSender on eSender._id = pm.id_src
+				where 		h.id_entity = ?_id
+					and	h.id6 = pm.id_dest
+					and ?cur_date between start_date and end_date]]>
+        </statement>
+    </query>
+    <query name="getWorkDaysForAShift" >
+        <statement>
+
+<![CDATA[select logic_day, d.*
+				from shift2day s2d, day d
+				where s2d.id_day = d._id
+				and s2d.id_shift = ?id_shift order by logic_day]]>
+        </statement>
+    </query>
+    <query name="filterLogWithDates" >
+        <statement>
+
+<![CDATA[SELECT log._id, punch.name, employee.first_name, employee.last_name, log.annotation, log.date, CASE WHEN (log.status=1) THEN 'In' WHEN (log.status=2) THEN 'Out' WHEN (log.status=3)  THEN 'Unknown' WHEN (log.status=4)  THEN 'none' END AS status
+		    FROM attendance_log as log 
+		    INNER JOIN attendance_event as punch on log.id_attendance_event=punch._id 
+		    INNER JOIN employee ON log.id_employee=employee._id		
+	    WHERE log.date >= ?start_date and log.date <= ?end_date]]>
+        </statement>
+    </query>
+    <query name="detailedEmployeeLog" >
+        <statement>
+
+<![CDATA[SELECT log.date,  ae.name,  log.annotation
+FROM attendance_log as log, attendance_event as ae
+WHERE log.id_attendance_event = ae._id 
+and log.id_employee = ?employee_id
+and log.date >= ?start_date and log.date <= ?end_date]]>
+        </statement>
+    </query>
+    <query name="filterLog" >
+        <statement>
+
+<![CDATA[SELECT log._id, punch.name, employee.first_name, employee.last_name, log.annotation, log.date 
+		    FROM attendance_log as log 
+		    INNER JOIN attendance_event as punch on log.id_attendance_event=punch._id 
+		    INNER JOIN employee ON log.id_employee=employee._id	
+		    WHERE log.date >= ?date1 and log.date <= ?date2]]>
+        </statement>
+    </query>
+    <query name="getShiftInfoFromEntityAndDate" >
+        <statement>
+
+<![CDATA[select  gsh.hierarchy_distance, s2e.priority as priority, s2e._id as shift_2_entity_id, s2e.start_date as start_date, s2e.end_date as end_date, s2e.start_logic_date,s2e.name as s2e_name, s2e.id_entity, shift._id as shift_id,
+ shift.name as shift_name, shift.margin, s2d.logic_day, s2d.id_day, d.name as day_name, d.description as day_description,
+ (
+	select sum(duration_minutes)
+	from day2schedule d2s, schedule s
+	where 	s2d.id_day = d2s.id_day
+	and	d2s.id_schedule = s._id
+ ) as duration_minutes, d.color, s2e.id_attendance_event
+from view_get_shift_hierarchy gsh,
+	shift2entity s2e,
+	shift2day s2d,
+	shift shift,
+	day d
+where 	gsh.id_entity = ?entity_id
+and	s2e._id = gsh.id_shift2entity
+/*get the shift for this day*/
+and	(s2e.start_date <= ?end_date or  s2e.end_date >= ?input_date or s2e.end_date is null )
+and 	s2d.id_shift = s2e.id_shift
+/*At this point we know the day*/
+and shift._id = s2d.id_shift
+and d._id = s2d.id_day
+and s2e.id_shift = shift._id
+order by hierarchy_distance asc, priority desc, s2e._id, s2d.logic_day
+]]>
+        </statement>
+    </query>
+    <query name="insertDay" >
+        <statement>
+<![CDATA[insert into day(id_day_type,name,description,start_minutes,color) values(?,?,?,?,(select COALESCE(max(color),-1) +1 % ? from day));]]></statement>
+    </query>
+    <query name="insertS2EincrementingPriority" >
+        <statement>
+
+<![CDATA[insert into shift2entity(id_shift, id_attendance_event, id_entity, start_date, end_date, name, start_logic_date, priority)	
+select ?id_shift, ?id_attendance_event, ?id_entity, ?input_date, ?end_date, ?name, ?start_logic_date,case when  COALESCE(max(priority),0) >= 1000 then COALESCE(max(priority)+1,0) else 1000 end
+from view_get_shift_hierarchy v, shift2entity s2e
+where 	v.id_entity = ?id_entity
+and s2e._id = v.id_shift2entity
+and	(s2e.start_date <= ?end_date or  s2e.end_date >= ?input_date or s2e.end_date is null )]]>
+        </statement>
+    </query>
+    <query name="updateS2EincrementingPriority" >
+        <statement>
+
+<![CDATA[update shift2entity SET id_shift = ?id_shift, id_attendance_event = ?id_attendance_event,
+	     id_entity = ?id_entity, start_date = ?input_date, end_date = ?end_date, name = ?name, start_logic_date = ?start_logic_date, priority = (select case when  ifnull(max(priority),0) >= 1000 then ifnull(max(priority)+1,0) else 1000 end
+from shift2entity s2eP
+where 	id_entity = ?id_entity
+and	(s2eP.start_date <= ?end_date or  s2eP.end_date >= ?input_date or s2eP.end_date is null ))
+where _id = ?ids2e]]>
+        </statement>
+    </query>
+
+    <!-- Reports -->
+
+    <query name="getEmployeeSummaryReport" >
+        <statement>
+
+<![CDATA[
+    select al._id, al.date as date , al.processed as processed , ae.name as attendance, al.status as status
+ from attendance_log al, attendance_event ae
+ where id_employee = ?employee
+ and ae._id = al.id_attendance_event
+ and al.date between ?start_date and ?end_date
+ order by al.date desc limit ?limit]]>
+        </statement>
+    </query>
+    <query name="EmployeeAttendanceReport" >
+        <statement>
+
+<![CDATA[select  ae.name as attendance, login_combination, annotation, date, ae.absence, ae.count_as_work
+from 	attendance_log l,
+	employee e,
+	attendance_event ae,
+	view_hierarchy_childs vhc
+where	l.id_employee = e._id
+and	ae._id = l.id_attendance_event
+and 	e._id in (vhc.id, vhc.id2, vhc.id3, vhc.id4, vhc.id5)
+and	vhc.id = ?employee
+and date between 
+ (
+	select start_date 
+	from (
+		select min(date) as start_date
+		from 	attendance_log l,
+			attendance_event ae
+		where 	l.id_employee = e._id 	
+		and	l.date > ?start_date
+		and ae._id = l.id_attendance_event
+		and ae.absence = 0
+		and not exists(
+			select 1
+			from 	attendance_log lprev,
+				attendance_event aeprev
+			where 	lprev.id_employee = l.id_employee
+			and	lprev.date < l.date
+			and 	lprev.date > ?start_date
+			and 	aeprev.absence = 1
+		) 
+	) where start_date is not null
+	union all
+	select start_date 
+	from (
+		select max(date) as start_date
+		from 	attendance_log l,
+			attendance_event ae
+		where 	l.id_employee = e._id 	
+		and	l.date < ?start_date
+		and ae._id = l.id_attendance_event
+		and ae.absence = 0
+		and exists(
+			select 1 as start_date
+			from 	attendance_log lnext,
+				attendance_event aenext
+			where 	lnext.id_employee = l.id_employee
+			and 	lnext.date > ?start_date
+			and	aenext._id = lnext.id_attendance_event
+			and 	aenext.absence = 1
+			and	lnext.date = 
+				(select min(lfirst.date)
+				from 	attendance_log lfirst,
+					attendance_event aefirst
+				where 	lfirst.id_employee = lnext.id_employee
+				and	aefirst._id = lfirst.id_attendance_event
+				and	aefirst.absence = 1
+				)
+		) 
+	) where start_date is not null
+ )
+ and
+(
+	select end_date 
+	from (
+		select max(date) as end_date
+		from 	attendance_log l,
+			attendance_event ae
+		where 	l.id_employee = e._id 	
+		and	l.date < ?end_date
+		and ae._id = l.id_attendance_event
+		and ae.absence = 1
+		and not exists(
+			select 1
+			from 	attendance_log lprev,
+				attendance_event aeprev
+			where 	lprev.id_employee = l.id_employee
+			and	lprev.date > l.date
+			and 	lprev.date < ?end_date
+			and 	aeprev.absence = 0
+		) 
+	) where end_date is not null
+	union all
+	select end_date 
+	from (
+		select min(date) as end_date
+		from 	attendance_log l,
+			attendance_event ae
+		where 	l.id_employee = e._id 	
+		and	l.date > ?end_date 
+		and ae._id = l.id_attendance_event
+		and ae.absence = 1
+		and exists(
+			select 1 as start_date
+			from 	attendance_log lnext,
+				attendance_event aenext
+			where 	lnext.id_employee = l.id_employee
+			and 	lnext.date < ?end_date
+			and	aenext._id = lnext.id_attendance_event
+			and 	aenext.absence = 0
+			and	lnext.date = 
+				(select max(llast.date)
+				from 	attendance_log llast,
+					attendance_event aelast
+				where 	llast.id_employee = lnext.id_employee
+				and	aelast._id = llast.id_attendance_event
+				and	aelast.absence = 0
+				)
+		) 
+	) where end_date is not null
+)
+
+order by id_employee, date]]>
+        </statement>
+    </query>
+    <query name="EntityAttendanceReport" >
+        <statement>
+
+<![CDATA[SELECT e.pin as pin, e.first_name as first_name, e.last_name as last_name, ae.name as attendance, status, id_device, date
+FROM view_hierarchy_childs vhc, 
+    employee e,
+    attendance_log al,
+    attendance_event ae
+WHERE   vhc.id = ?entity
+    AND e._id in (vhc.id, vhc.id2, vhc.id3, vhc.id4, vhc.id5)
+    AND al.id_employee = e._id
+    AND al.id_attendance_event = ae._id
+    AND date between ?start_date and ?end_date
+ORDER BY date desc limit ?limit]]>
+        </statement>
+    </query>
+    <query name="getDepartmentInfo" >
+        <statement>
+<![CDATA[select *, (select name from department d2 where d2._id = d.id_parent) as parent from department d WHERE d._id like ?]]></statement>
+    </query>
+    <query name="searchInDepartments" >
+        <statement>
+<![CDATA[SELECT _id, name FROM DEPARTMENT WHERE name like ?search]]></statement>
+    </query>
+    <query name="getDepartments" >
+        <statement>
+
+<![CDATA[select _id as entity_id
+from entity_group
+]]>
+        </statement>
+    </query>
+    <query name="getExceptionsLog" >
+        <statement>
+
+<![CDATA[select ae.name as attendance , date, annotation, processed
+from attendance_log log, attendance_event ae
+where id_attendance_event > 2 
+and log.id_attendance_event = ae._id
+and id_employee = ?employee
+and date >= ?start_date
+and date <= ?end_date
+limit ?limit
+]]>
+        </statement>
+    </query>
+    <query name="getTheoricalWorkForEmployeeAndDay" >
+        <statement>
+
+<![CDATA[select distinct s.*
+from view_get_shift_hierarchy gsh,
+	shift2entity s2e,
+	shift2day s2d,
+	day2schedule d2s,
+	schedule s
+where 	gsh.id_entity = ?entity
+and	s2e._id = gsh.id_shift2entity
+/*get the shift for this day*/
+and	s2e.start_date <= ?input_date
+and 	( s2e.end_date >= ?input_date + 86400000  or s2e.end_date is null )
+and 	not exists /*doesn't exists a shift with a highest level of priority for that date*/
+		(
+		select 1
+		from 	view_get_shift_hierarchy gsh2, 
+			shift2entity s2e2
+		where 	gsh2.id_entity = gsh.id_entity
+			and s2e2._id = gsh2.id_shift2entity
+		and	s2e2.start_date <= ?input_date
+		and 	( s2e2.end_date >= ?input_date + 86400000  or s2e2.end_date is null )
+		and	(gsh2.hierarchy_distance < gsh.hierarchy_distance) 
+			or /* (not exists) a closest entity with shift, or at the same distance but with highest prioririty*/
+			(gsh2.hierarchy_distance = gsh.hierarchy_distance and s2e2.priority > s2e.priority)
+		)
+/*knowing the id_shift and the date, retrieve the shift's logic day*/
+
+and 	s2d.id_shift = s2e.id_shift
+and 	s2d.logic_day = (select(julianday(?input_date / 1000, 'unixepoch') - julianday(s2e.start_logic_date / 1000, 'unixepoch'))    
+	%	(select max(s2dAux.logic_day)
+		from shift2day s2dAux
+		where id_shift = s2e.id_shift)
+	)	
+/*At this point we know the day*/
+and	s2d.id_day = d2s.id_day
+and 	s._id = d2s.id_schedule
+order by s._id]]>
+        </statement>
+    </query>
+    <query name="selectLoginCombinationsByPIN" >
+        <statement>
+
+<![CDATA[select elc.*
+from employee_login_combination elc, employee e
+where e.pin = ?pin
+and e._id = elc.id_employee
+]]>
+        </statement>
+    </query>
+    <query name="getUserPrivileges" >
+        <statement>
+<![CDATA[select id_privilege from role2entity r2e inner join role2privilege r2p on (r2e.id_role = r2p.id_role)  where r2e.id_entity =?id_entity]]></statement>
+    </query>
+    <query name="getUserCount" >
+        <statement>
+<![CDATA[select count(*) as num_employees from employee]]></statement>
+    </query>
+    <query name="getEmployeeWithLoginInfo" >
+        <statement>
+
+<![CDATA[select *, 
+(select count(*) from employee_login elpwd where e._id = elpwd.id_employee and elpwd.id_login = 1) as pwd,
+(select count(*) from employee_login elface where e._id = elface.id_employee and elface.id_login = 4) as face,
+(select count(*) from employee_login elcard where e._id = elcard.id_employee and elcard.id_login = 3) as card,
+(select count(*) from employee_login elfp where e._id = elfp.id_employee and elfp.id_login = 2) as fp
+from employee e
+where e._id = ?_id]]>
+        </statement>
+    </query>
+
+    <query name="getEmployeeLogsForADate" >
+        <statement>
+
+<![CDATA[
+    select al._id, al.date as date , al.processed as processed , ae.name as attendance, ae.count_as_work
+ from attendance_log al, attendance_event ae
+ where id_employee = ?employee
+ and ae._id = al.id_attendance_event
+ and al.date between ?start_date and ?end_date
+ order by al.date]]>
+        </statement>
+    </query>
+    <query name="getHoursWorkedAndOff" >
+        <statement>
+
+<![CDATA[select al.date, al.status, ae.count_as_work,ae.extensible,ae.absence,al.id_attendance_event  
+from attendance_log al INNER JOIN attendance_event as ae 
+ON al.id_attendance_event = ae._id	
+where al.id_employee = ?employee 
+and al.date between ?start_date and ?end_date  
+order by al.date asc 
+]]>
+        </statement>
+    </query>
+    <query name="getLastestAttLogFromDate" >
+        <statement>
+
+<![CDATA[
+                       select * 
+ from attendance_log al1
+ where id_employee = ?employee 
+	and date >= ?start_date 
+	and date < ?input_date
+and not exists (
+	select 1 
+	 from attendance_log al2
+	 where al2.date > al1.date
+		and al2.id_employee = al1.id_employee
+		and date >= ?start_date 
+		and date < ?input_date
+)
+            ]]>
+        </statement>
+    </query>
+    <query name="getLatestAttLogFromDateExtra" >
+        <statement>
+
+<![CDATA[
+             select * 
+ from attendance_log al1
+ where id_employee = ?employee 
+	and date >= ?start_date 
+	and date < ?input_date
+	and status != -1
+	and status != 3
+and not exists (
+	select 1 
+	 from attendance_log al2
+	 where al2.date > al1.date
+		and al2.id_employee = al1.id_employee
+		and date >= ?start_date 
+		and date < ?input_date
+		and status != -1
+		and status != 3	
+)
+            ]]>
+        </statement>
+    </query>
+    <query name="getLatestAttLogCountForDate" >
+        <statement>
+
+<![CDATA[
+            select count(*) as log_count from attendance_log where id_employee = ?employee 
+            and (date >= ?start_date and date < ?input_date) 
+            ]]>
+        </statement>
+    </query>
+    <query name="insertIntoEmployeeLoginIncrementingMultiValue" >
+        <statement>
+
+<![CDATA[insert into employee_login(id_login, id_employee, id_multi_value, id_action_group, value, salt) 
+select ?id_login, ?id_employee, COALESCE(max(id_multi_value)+1,0), ?id_action_group, ?value, ?salt
+from employee_login
+where 	id_employee = ?id_employee
+and	id_login = ?id_login]]>
+        </statement>
+    </query>
+    <query name="getEmployeesWithLoginAndDepartmentInfo" >
+        <statement>
+
+<![CDATA[select e._id, e.first_name, e.last_name, e.pin, eg.name as department,
+(select count(*) from employee_login elpwd where e._id = elpwd.id_employee and elpwd.id_login = 1) as pwd,
+(select count(*) from employee_login elface where e._id = elface.id_employee and elface.id_login = 4) as face,
+(select count(*) from employee_login elcard where e._id = elcard.id_employee and elcard.id_login = 3) as card,
+(select count(*) from employee_login elfp where e._id = elfp.id_employee and elfp.id_login = 2) as fp
+from entity_group eg, entity en , employee e
+left join view_hierarchy_tree vht on e._id = vht.id_entity
+where 	eg._id = vht.id2 and en._id = e._id and en.enabled = 1
+order by department, last_name, first_name]]>
+        </statement>
+    </query>
+    <query name="getHierarchyTreeInfoForAnEntity" >
+        <statement>
+<![CDATA[select * from view_hierarchy_tree where id_entity = ?id_entity]]></statement>
+    </query>
+    <query name="getHighestPinOfEmployees" >
+        <statement>
+<![CDATA[select max(pin) as pin from employee where pin + 0 = pin]]></statement>
+    </query>
+    <query name="getUntappedPin" >
+        <statement>
+<![CDATA[select pin from employee where pin + 0 = pin order by pin asc]]></statement>
+    </query>
+    <query name="getTableNames" >
+        <statement>
+<![CDATA[SELECT table_name FROM information_schema.tables where table_schema = 'limbo' and table_type='BASE TABLE']]></statement>
+    </query>
+    <query name="entityExceptionsReport" >
+        <statement>
+
+<![CDATA[SELECT e.first_name as first_name, e.last_name as last_name, e.pin as pin, ae.name as attendance, ae.absence as absence, al.status as status, date
+FROM attendance_log al,
+    attendance_event ae,
+    view_hierarchy_childs vhc,
+    employee e
+WHERE  vhc.id = ?entity
+    AND e._id in (vhc.id, vhc.id2, vhc.id3, vhc.id4, vhc.id5) 
+    AND al.id_employee = e._id
+    AND ae._id = al.id_attendance_event
+    AND al.date between ?start_date and ?end_date
+    ORDER BY e._id, date limit ?limit
+]]>
+        </statement>
+    </query>
+    <query name="move2parent" >
+        <statement>
+<![CDATA[update entity_hierarchy set id_parent = (select id_parent from entity_hierarchy where id_entity = ?old_parent) where id_parent = ?old_parent]]></statement>
+    </query>
+    <query name="getValidMessageByEntity" >
+        <statement>
+
+<![CDATA[select pm.*, pm2e.id_entity from personal_message pm, personal_message2entity 
+       	    pm2e where pm._id = pm2e.id_personal_message and (pm2e.id_entity = ?employee or pm2e.id_entity = 0) 
+       	    and ?date between pm.start_date and pm.end_date order by pm.start_date desc]]>
+        </statement>
+    </query>
+    <query name="getMessagesByEntity" >
+        <statement>
+
+<![CDATA[select pm.*, pm2e.id_entity, pm2e.read from personal_message pm, personal_message2entity 
+       	    pm2e where pm._id = pm2e.id_personal_message and pm2e.id_entity = ?employee]]>
+        </statement>
+    </query>
+    <query name="getMessagesById" >
+        <statement>
+
+<![CDATA[select pm.*, pm2e.id_entity, pm2e.read from personal_message pm, personal_message2entity 
+       	    pm2e where pm._id = pm2e.id_personal_message and pm._id = ?id]]>
+        </statement>
+    </query>
+    <query name="getAllEmployeesOfMessages" >
+        <statement>
+
+<![CDATA[select distinct pm2t.id_entity as _id, emp.first_name as first_name from personal_message2entity pm2t, employee emp 
+where pm2t.id_entity<>0 
+and pm2t.id_entity=emp._id 
+order by emp.pin ASC]]>
+        </statement>
+    </query>
+    <query name="getEmployeeOfMessage" >
+        <statement>
+
+<![CDATA[select distinct pm2t.id_entity as _id, emp.first_name as first_name from personal_message2entity pm2t, employee emp 
+where pm2t.id_entity<>0 
+and pm2t.id_entity=emp._id 
+and pm2t.id_entity=?id_entity 
+order by emp.pin ASC]]>
+        </statement>
+    </query>
+    <query name="getPersonalMessagesByEntity" >
+        <statement>
+
+<![CDATA[select pm2t.id_personal_message as _id, pm2t.read as read, pm.subject as subject, emp.first_name as first_name, pm2t.id_entity as id_entity
+from personal_message2entity pm2t, personal_message pm,employee emp 
+where pm2t.id_entity <> 0 
+and pm._id=pm2t.id_personal_message 
+and pm2t.id_entity=emp._id
+and pm2t.id_entity=?entity]]>
+        </statement>
+    </query>
+    <query name="getAllPersonalMessages" >
+        <statement>
+
+<![CDATA[select pm2t.id_personal_message as _id, pm2t.read as read, pm2t.id_entity as id_entity, pm.subject as subject 
+from personal_message2entity pm2t, personal_message pm,employee emp 
+where pm2t.id_entity <> 0 
+and pm._id=pm2t.id_personal_message 
+and pm2t.id_entity=emp._id
+order by emp.pin ASC]]>
+        </statement>
+    </query>
+    <query name="getPersonalMessages" >
+        <statement>
+
+<![CDATA[select pm2t.id_personal_message as _id, pm2t.read as read, pm2t.id_entity as id_entity, pm.subject as subject 
+from personal_message2entity pm2t, personal_message pm,employee emp 
+where pm2t.id_entity <> 0 
+and pm._id=pm2t.id_personal_message 
+and pm2t.id_entity=emp._id
+and pm2t.id_entity=?entity
+order by emp.pin ASC]]>
+        </statement>
+    </query>
+    <query name="getAllPublicMessages" >
+        <statement>
+<![CDATA[select pm._id as _id, pm.subject as subject from (select * from personal_message2entity where id_entity = 0) pm2t, personal_message pm where pm2t.id_personal_message = pm._id]]></statement>
+    </query>
+    <query name="getCountOfEnabledEmployees" >
+        <statement>
+<![CDATA[select count(*) as count from employee e, entity en where e._id = en._id and en.enabled = 1]]></statement>
+    </query>
+    <query name="getMessagesCount" >
+        <statement>
+
+<![CDATA[select count(*) as count 
+	     from personal_message2entity pm2e, personal_message pm 
+	     where 	id_entity = ?id_entity
+	     and read = 0 
+	     and	pm2e.id_personal_message = pm._id 
+	     and ?column between start_date and end_date ]]>
+        </statement>
+    </query>
+     <query name="getReceiverCount" >
+        <statement>
+
+<![CDATA[select count(*) as count 
+	     from personal_message2entity
+	     where id_personal_message = ?id_personal_message ]]>
+        </statement>
+    </query>
+    
+      <query name="purgeMessages" >
+        <statement>
+
+<![CDATA[delete from personal_message where not
+ exists (select 1 from personal_message2entity 
+ where personal_message2entity.id_personal_message = personal_message._id) ]]>
+        </statement>
+    </query>
+     
+    <query name="getEntityPunchForDate" >
+        <statement>
+
+<![CDATA[SELECT log._id, punch.name, log.annotation, CASE WHEN (log.status=1) THEN 'In' WHEN (log.status=2) THEN 'Out' WHEN (log.status=3)  THEN 'Unknown' WHEN (log.status=-1)  THEN 'None' END AS status, 
+			log.date
+		    FROM attendance_log as log 
+		    INNER JOIN attendance_event as punch on log.id_attendance_event=punch._id 
+	    WHERE log.id_employee = ?id and log.date between ?start_date and ?end_date ORDER by log.date DESC]]>
+        </statement>
+    </query>
+    
+     <query name="getCountOfEmployeesWithPrivileges" >
+        <statement>
+<![CDATA[SELECT COUNT(*) AS count
+FROM entity e, role2entity r2e
+WHERE e._id = r2e.id_entity
+AND e.enabled = 1
+AND e._id != 1
+]]>
+        </statement>
+    </query>
+    
+      <query name="getCountOfSuperAdmins" >
+        <statement>
+<![CDATA[SELECT COUNT(*) AS count
+FROM entity e, role2entity r2e
+WHERE e._id = r2e.id_entity
+AND e.enabled = 1
+AND e._id != 1
+AND r2e.id_role = 1
+]]>
+        </statement>
+    </query>
+
+	<query name="getAttendanceEventData" >
+		<statement><![CDATA[select al.id_employee as id_employee, e.first_name as first_name, e.last_name as last_name, e.pin as pin, al.date as date, ae.name as name, e.photo as photo,
+(CASE 	WHEN al.status=1 THEN '@string/status_in'
+		WHEN al.status=2 THEN '@string/status_out'
+		WHEN al.status=3 THEN '@string/status_unknown' end) as status,
+		al.id_device as id_device, al.annotation as annotation, al._id as control, ae.code as code, eg.name as entity_group_name, eg._id as entity_group_id
+from attendance_log al, attendance_event ae, employee e, view_hierarchy_tree vh, entity_group eg
+where al.id_employee = e._id and al.id_attendance_event = ae._id and e._id = vh.id_entity and vh.id2 = eg._id
+    and al.date >= ?start_date
+    and al.date <= ?input_date
+/*and al._id not in (select control from card)*/
+order by date desc]]></statement>
+	</query>
+
+	<query name="attemptLogin" >
+		<statement><![CDATA[select el.value as value, el.salt as salt, e._id as _id
+    from employee e, entity en, employee_login el, employee_login_combination elc
+    where 	e._id = en._id
+    and en.enabled = 1
+    and el.id_employee = e._id
+    and el.id_login = 1
+    and elc.id_employee = e._id
+    and elc.login_combination = 3
+    and e.pin = ?pin]]></statement>
+	</query>
+
+	<query name="getEmployeeInOut" >
+		<statement><![CDATA[select distinct e._id as id_employee, e.pin as pin, e.first_name as first_name , e.last_name as last_name , e.photo as photo,
+	(select count(*)
+	from attendance_log al
+	where al.date >= ?start_date
+		and date <= ?input_date
+		and e._id = al.id_employee
+	) as num_logs,
+	(select al.date || ';'|| ae.name || ';' || (CASE 	WHEN al.status=1 THEN '@string/status_in'
+		WHEN al.status=2 THEN '@string/status_out'
+		WHEN al.status=3 THEN '@string/status_unknown' end)
+	from attendance_log al, attendance_event ae
+	where 	al.id_attendance_event = ae._id
+		and al.date >= ?start_date
+		and al.date <= ?input_date
+		and e._id = al.id_employee
+		and al.date >= COALESCE((	select al2.date
+						from attendance_log al2
+						where al2.date >= ?start_date
+							and al2.date <= ?input_date
+							and al2.id_employee = al.id_employee
+							and al2._id != al._id
+					     ),0)
+	) as last_event
+from employee e, view_hierarchy_childs vhc
+where e._id<>1
+and vhc.id = ?group_id
+and (id2 = e._id or id3 = e._id  or id4 = e._id  or id5 = e._id)
+]]></statement>
+	</query>
+
+
+	<query name="getSchedulesForADay" >
+		<statement><![CDATA[select s.*
+    from schedule s, day2schedule d2s
+    where s._id = d2s.id_schedule
+    and d2s.id_day = ?id_day
+    order by init_minutes
+]]></statement>
+	</query>
+
+	<query name="getDepartment" >
+		<statement><![CDATA[select _id, name from entity_group]]></statement>
+	</query>
+
+	<query name="getLastLogDataForEmployee" >
+		<statement><![CDATA[select al.id_employee as employeeId, e.first_name as first_name, e.last_name as last_name, e.pin as pin,
+            al.date as date, ae.name as eventName,
+(CASE 	WHEN al.status=1 THEN '@string/status_in'
+		WHEN al.status=2 THEN '@string/status_out'
+		WHEN al.status=3 THEN '@string/status_unknown' end) as status,
+		al.id_device as id_device
+from attendance_log al, attendance_event ae, employee e, view_hierarchy_tree vh, entity_group eg
+where al.id_employee = e._id and al.id_attendance_event = ae._id and e._id = vh.id_entity and vh.id2 = eg._id
+    and al.date >= ?start_date
+    and al.date <= ?input_date
+    and al.id_employee= ?employee_id
+    order by al.date desc limit 5
+/*and al._id not in (select control from card)*/]]></statement>
+	</query>
+
+	<query name="getValidMessageByEntityForCards" >
+		<statement>
+			<![CDATA[select pm.*, pm2e.id_entity
+            from personal_message pm, personal_message2entity pm2e
+            where pm._id = pm2e.id_personal_message and (pm2e.id_entity = ?employee or pm2e.id_entity = 0)
+       	    and ?date between pm.start_date and pm.end_date
+       	    order by pm.start_date desc]]>
+		</statement>
+	</query>
+
+	<query name="selectDepartmentById" >
+		<statement><![CDATA[select _id, name from entity_group where _id=?id]]></statement>
+	</query>
+
+</queries>

@@ -1,0 +1,93 @@
+@(form: Form[LoginForm])(implicit flash: Flash)
+
+<html>
+    <head>
+        <title>ZKProtoRestful Login</title>
+        <link rel="shortcut icon" type="image/png" href="@routes.Assets.at("images/favicon.png")">
+        <link rel="stylesheet" type="text/css" media="screen" href="@routes.Assets.at("stylesheets/main.css")">
+        <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.2/jquery.min.js"></script>
+        <script type="text/javascript" src="@routes.JavascriptRoute.javascriptRoutes"></script>
+        <script src="@routes.Assets.at("javascripts/cookie.js")" type="text/javascript"></script>
+    </head>
+    <body onload="checkTimeout()">
+
+        <header>
+            <a href="@routes.Security.login" id="logo"><span>ZKProto</span>Restful</a>
+        </header>
+
+        <div class="form">
+
+            <h1>Sign in</h1>
+
+
+            <p hidden class="error" id="error"></p>
+
+
+            @flash.get("success").map { message =>
+                <p class="success" id="success">
+                    @message
+                </p>
+            }
+
+            <p hidden class="session" id="session"></p>
+
+            @helper.inputText(form("username"),'_label-> "Username")
+            @helper.inputPassword(form("password"),'_label-> "Password")
+            <input type="hidden" id="client_id" name="client_id" value='@form.data.get("client_id")'>
+            <input type="hidden" id="client_secret" name="client_secret" value='@form.data.get("client_secret")'>
+            <input type="hidden" id="grant_type" name="grant_type" value='@form.data.get("grant_type")'>
+
+            <p>
+                <button class="create" type="submit" id="loginbutton" onclick="sendAjax()">Login</button>
+            </p>
+        </div>
+
+        <script type="text/javascript">
+            function sendAjax(){
+            var testAjax = jsRoutes.controllers.Security.accessToken();
+            $.ajax( {
+            type : 'POST',
+            url : testAjax.url,
+            data : {
+            "username" : $ ( "#username" ).val ( ),
+            "password" : $ ( "#password" ).val ( ),
+            "client_secret" : $ ( "#client_secret" ).val ( ),
+            "client_id" : $ ( "#client_id" ).val ( ),
+            "grant_type" : $ ( "#grant_type" ).val ( )
+            },
+            success : function ( data, textStatus, xhr ) {
+            var url = jsRoutes.controllers.Application.setting ( ).url + "?access_token=" + data.access_token ;
+            if ( xhr.status = "ok" ) {
+                //save tokens to the cookiee...
+               setCookie('access_token', data.access_token ,1);
+               setCookie('refresh_token', data.refresh_token ,6);
+                //redirect...
+                window.location.href = url ;
+            }
+            },
+            error : function ( jqXhr, textStatus, error ) {
+            if ( jqXhr.status = 401 ) {
+                $("#success" ).hide();
+                $("#session" ).hide();
+                var error_paragraph = $("#error" );
+                error_paragraph.text("Invalid username or password");
+                error_paragraph.show() ;
+            }
+            }
+            });
+            }
+                //this function checks session timeout!
+            function checkTimeout(){
+            if(checkSessionTimeout()){
+            var session_paragraph = $("#session" );
+            session_paragraph.text("Session has been expired!");
+            session_paragraph.show();
+            }
+            }
+        </script>
+
+    </body>
+</html>
+    
+
+

@@ -1,0 +1,119 @@
+@(users: List[User])(implicit flash: Flash)
+
+<html>
+    <head>
+        <title>Users</title>
+        <link rel="shortcut icon" type="image/png" href="@routes.Assets.at("images/favicon.png")">
+        <link rel="stylesheet" type="text/css" media="screen" href="@routes.Assets.at("stylesheets/main.css")">
+        <link rel="stylesheet" type="text/css" media="screen" href="@routes.Assets.at("stylesheets/menu.css")">
+        <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.2/jquery.min.js"></script>
+        <script type="text/javascript" src="@routes.JavascriptRoute.javascriptRoutes"></script>
+        <script src="@routes.Assets.at("javascripts/cookie.js")" type="text/javascript"></script>
+    </head>
+        <!--  background="@routes.Assets.at("images/zkteco-logo.png")" -->
+    <body onload="checkTimeout()">
+        <div id="header">
+            <div id="logo">
+                <span>ZKProto</span>Restful
+                <a class="special" href="@routes.Security.logout()">Logout</a>
+            </div>
+            <div id="title">
+                <div class="about">
+                </div>
+                <nav id="primary_nav_wrap">
+                    <ul>
+                        <li><a href="#" id="clients">Clients</a>
+                        </li>
+                        <li class="selected"><a href="#" id="users">Users</a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+        <div class="form" >
+            <div style="position : relative ;">
+                <h1>Users</h1>
+                <button class="create" type="submit" id="delete" onclick="callCreate()" style="float:right;position:
+                    relative;top: 30px; right : 5px ;">Add New User</button>
+                @flash.get("success").map { message =>
+                    <p class="success" style="">
+                        @message
+                    </p>
+                }
+            </div>
+            @if(!users.isEmpty){
+                <table id="userTable" class="table"  border="3" align="center">
+                    <tr>
+                        <th>Id</th>
+                        <th>Username</th>
+                        <th>Email</th>
+                        <th>Permission</th>
+                        <th>Operation</th>
+                    </tr>
+                    @for(user <- users) {
+                        <tr>
+                            <td id="id">@user._id</td>
+                            <td>@user.username</td>
+                            <td>@user.email</td>
+                            <td>@user.permission</td>
+                            <td>@helper.form(routes.Application.removeUser(user._id)){
+                                <button class="delete" type="submit">Delete</button>
+                            }</td>
+                        </tr>
+                    }
+                </table>
+            } else {
+                <h2>There is not any added user!</h2>
+            }
+        </div>
+        <script type="text/javascript">
+        var access_token = getCookie('access_token');
+        var refresh_token = getCookie('refresh_token');
+        var login = jsRoutes.controllers.Security.login( ).url;
+        $("#clients" ).click(function callClients(){
+        if(checkSessionTimeout()){
+        window.location.href= login;
+        }
+        else{
+        var clients = jsRoutes.controllers.Application.clients( ).url + "?access_token=" + access_token;
+        window.location.href= clients;
+        }
+        });
+        $("#users" ).click(function callUsers(){
+        if(checkSessionTimeout()){
+        window.location.href= login;
+        }
+        else{
+        var users = jsRoutes.controllers.Application.users( ).url + "?access_token=" + access_token;
+        window.location.href= users;
+        }
+        });
+        function callCreate(){
+        if(checkSessionTimeout()){
+        window.location.href= login;
+        }
+        else{
+        var addUser = jsRoutes.controllers.Application.addUser().url + "?access_token=" + access_token;
+        window.location.href= addUser;
+        }
+        }
+        $(".delete" ).click(function(){
+        var form = $(this ).closest('form');
+        if(checkSessionTimeout()){
+        //what if token expires before clicking button?
+        window.location.href= login;
+        }
+        else{
+        var url = form.attr("action") + "?access_token=" + access_token;
+        form.attr("action",url);
+        form.submit();
+        }
+        });
+        function checkTimeout(){
+        if(checkSessionTimeout()){
+        window.location.href= login;
+        }
+        }
+        </script>
+    </body>
+</html>

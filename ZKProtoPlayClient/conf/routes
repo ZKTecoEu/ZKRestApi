@@ -1,0 +1,91 @@
+# Routes
+# This file defines all application routes (Higher priority routes first)
+# ~~~~
+OPTIONS        /*url                             controllers.Application.options(url: String)
+
+# Swagger - Root Rosources Listing
+GET            /api-docs                         controllers.ApiHelpController.getResources
+
+# Home page
+GET            /                                 controllers.Security.login
+GET            /index                            controllers.Application.index
+GET            /login                            controllers.Security.login
+GET            /logout                           controllers.Security.logout
+GET            /swagger                          controllers.Application.swagger
+
+#Javascript Routes
+GET            /javascriptRoutes                 controllers.JavascriptRoute.javascriptRoutes
+
+# Settings page
+GET            /settings                         controllers.Application.setting
+GET            /createClient                     controllers.Application.createClient
+POST           /createClient                     controllers.Application.addClientoDB
+POST           /clients/:id                      controllers.Application.removeClient(id:Long)
+GET            /createUser                       controllers.Application.addUser
+POST           /createUser                       controllers.Application.addUsertoDB
+POST           /users/:id                        controllers.Application.removeUser(id:Long)
+GET            /users                            controllers.Application.users
+GET            /clients                          controllers.Application.clients
+
+
+# Map static resources from the /public folder to the /assets URL path
+GET            /assets/*file                     controllers.Assets.at(path="/public", file)
+GET            /favicon.ico                      controllers.Assets.at(path="/public", file="favicon.ico")
+
+# Test for get request
+GET            /echo/:name                       controllers.Application.name(name: String)
+
+GET            /api-docs/oauth2                  controllers.ApiHelpController.getResource(path = "/oauth2")
+
+# Authorization request
+POST           /oauth2/access_token              controllers.Security.accessToken
+
+
+
+
+##################
+#BUSINESS RELATED
+##################
+
+# ##### Employee #####
+
+GET            /api-docs/br/employee             controllers.ApiHelpController.getResource(path = "/br/employee")
+
+# Get Employee
+GET            /br/employee/:id                  controllers.br.Employees.details(id: Long)
+# Create
+#POST           /employee/:zone_name/           controllers.br.Employees.details(id: Long)
+# Update
+#PUT            /employee/:zone_name/:id        controllers.br.Employees.details(id: Long)
+# Delete
+#DELETE         /employee/:zone_name/:id        controllers.br.Employees.details(id: Long)
+# Validate
+POST           /br/employee/validate             controllers.br.Employees.validate
+
+GET            /api-docs/br/attendancelog        controllers.ApiHelpController.getResource(path = "/br/attendancelog")
+
+# Insert attendance log to ZKProto
+POST           /br/attendancelog                 controllers.br.AttendanceLogs.insertAttendanceLog
+
+GET            /api-docs/br/query                controllers.ApiHelpController.getResource(path = "/br/query")
+
+# Custom Query without parameter
+GET            /br/query/:query_name             controllers.br.CustomQueries.queryWithoutParams(query_name:String)
+
+# Custom Query with parameters
+POST           /br/query/:query_name             controllers.br.CustomQueries.queryWithParams(query_name:String)
+
+##################
+#NON BUSINESS RELATED
+##################
+
+GET            /api-docs/data                    controllers.ApiHelpController.getResource(path = "/data")
+
+# Get all data
+GET            /data/:table_name                 controllers.nbr.Data.showAll(table_name: String)
+# Raw data access
+GET            /data/:table_name/:id             controllers.nbr.Data.show(table_name :String,id: Long)
+
+
+
+

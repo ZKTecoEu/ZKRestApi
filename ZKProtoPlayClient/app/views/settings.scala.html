@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+
+<html>
+    <head>
+        <title>Settings</title>
+        <link rel="shortcut icon" type="image/png" href="@routes.Assets.at("images/favicon.png")">
+        <link rel="stylesheet" type="text/css" media="screen" href="@routes.Assets.at("stylesheets/main.css")">
+        <link rel="stylesheet" type="text/css" media="screen" href="@routes.Assets.at("stylesheets/menu.css")">
+        <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.2/jquery.min.js"></script>
+        <script type="text/javascript" src="@routes.JavascriptRoute.javascriptRoutes"></script>
+        <script src="@routes.Assets.at("javascripts/cookie.js")" type="text/javascript"></script>
+    </head>
+        <!--  background="@routes.Assets.at("images/zkteco-logo.png")" -->
+    <body onload="checkTimeout()">
+        <div id="header">
+            <div id="logo">
+                <span>ZKProto</span>Restful
+                <a class="special" href="@routes.Security.logout()">Logout</a>
+            </div>
+            <div id="title">
+                <div class="about">
+                </div>
+                <nav id="primary_nav_wrap">
+                    <ul>
+                        <li>
+                            <a href="#" id="clients">Clients</a>
+                        </li>
+                        <li>
+                            <a href="#" id="users">Users</a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+        <script type="text/javascript">
+            var access_token = getCookie('access_token');
+            var refresh_token = getCookie('refresh_token');
+            var login = jsRoutes.controllers.Security.login( ).url;
+                $("#clients" ).click(function callClients(){
+                    if(checkSessionTimeout()){
+                window.location.href= login;
+                }
+                else{
+                var clients = jsRoutes.controllers.Application.clients( ).url + "?access_token=" + access_token;
+                window.location.href= clients;
+                }
+                });
+                $("#users" ).click(function callUsers(){
+                if(checkSessionTimeout()){
+                window.location.href= login;
+                }
+                else{
+                var users = jsRoutes.controllers.Application.users( ).url + "?access_token=" + access_token;
+                window.location.href= users;
+                }
+                });
+            function checkTimeout(){
+            if(checkSessionTimeout()){
+            window.location.href= login;
+            }
+            }
+        </script>
+    </body>
+</html>
