@@ -54,7 +54,7 @@ POST           /oauth2/access_token              controllers.Security.accessToke
 GET            /api-docs/br/employee             controllers.ApiHelpController.getResource(path = "/br/employee")
 
 # Get Employee
-GET            /br/employee/:id                  controllers.br.Employees.details(id: Long)
+GET            /:zone_name/br/employee/:id       controllers.br.Employees.details(id: Long,zone_name:String)
 # Create
 #POST           /employee/:zone_name/           controllers.br.Employees.details(id: Long)
 # Update
@@ -62,20 +62,20 @@ GET            /br/employee/:id                  controllers.br.Employees.detail
 # Delete
 #DELETE         /employee/:zone_name/:id        controllers.br.Employees.details(id: Long)
 # Validate
-POST           /br/employee/validate             controllers.br.Employees.validate
+POST           /:zone_name/br/employee/validate  controllers.br.Employees.validate(zone_name:String)
 
 GET            /api-docs/br/attendancelog        controllers.ApiHelpController.getResource(path = "/br/attendancelog")
 
 # Insert attendance log to ZKProto
-POST           /br/attendancelog                 controllers.br.AttendanceLogs.insertAttendanceLog
+POST           /:zone_name/br/attendancelog      controllers.br.AttendanceLogs.insertAttendanceLog(zone_name:String)
 
 GET            /api-docs/br/query                controllers.ApiHelpController.getResource(path = "/br/query")
 
 # Custom Query without parameter
-GET            /br/query/:query_name             controllers.br.CustomQueries.queryWithoutParams(query_name:String)
+GET            /:zone_name/br/query/:query_name  controllers.br.CustomQueries.queryWithoutParams(query_name:String,zone_name:String)
 
 # Custom Query with parameters
-POST           /br/query/:query_name             controllers.br.CustomQueries.queryWithParams(query_name:String)
+POST           /:zone_name/br/query/:query_name  controllers.br.CustomQueries.queryWithParams(query_name:String,zone_name:String)
 
 ##################
 #NON BUSINESS RELATED
