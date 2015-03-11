@@ -1,6 +1,6 @@
 import play.PlayScala
 
-name := "ZKProtoPlayClient"
+name := "ZKRestServer"
 
 version := "0.11"
 
@@ -16,3 +16,6 @@ libraryDependencies ++= Seq(
   "com.typesafe.play" %% "play-slick" % "0.8.1",
   "com.wordnik" %% "swagger-play2" % "1.3.12"
 )
+
+
+fork in run := true
