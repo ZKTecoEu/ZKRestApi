@@ -1,9 +1,10 @@
 package controllers.br
 
 import com.wordnik.swagger.annotations.{ApiOperation, Api}
+import controllers.ActionBuilders.Authenticated
 import models.{User, AttendanceLog}
 import play.api.mvc.Controller
-import utils.{Authenticated, SQLHelper, DBHelper}
+import utils.{SQLHelper, DBHelper}
 import formatters.AttendanceLogFormatter._
 
 /**

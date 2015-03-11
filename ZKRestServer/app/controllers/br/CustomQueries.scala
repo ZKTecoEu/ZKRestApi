@@ -3,6 +3,7 @@ package controllers.br
 import javax.ws.rs.PathParam
 
 import com.wordnik.swagger.annotations.{ApiParam, ApiOperation, Api}
+import controllers.ActionBuilders.Authenticated
 import models.User
 import play.api.libs.json.JsArray
 import play.api.mvc.Controller
