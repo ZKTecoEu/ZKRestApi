@@ -8,6 +8,7 @@ import play.api.Play.current
 import play.api.data.Forms._
 import play.api.data._
 import play.api.db._
+import utils.DBHelper
 
 import scala.collection.mutable.Seq
 import scala.language.postfixOps
@@ -210,51 +211,14 @@ object User {
     }
   }
 
-  //TODO keep this on the user object?
-  def createToken(_id:Long):String = {
-    val authtoken = UUID.randomUUID().toString
-    DB.withConnection{ implicit  connection =>
-      SQL(
-      """
-        update configuration.user set auth_token = {auth} where _id = {_id}
-      """
-      ).on(
-      'auth -> authtoken ,
-      '_id -> _id
-        ).executeUpdate()
-      authtoken
-    }
-  }
-
-  def validateToken(token:String):Boolean = {
-    DB.withConnection{ implicit connection =>
-      SQL(
-      """
-        select auth_token from configuration.user where auth_token = {token}
-      """
-      ).on('token -> token)().map(row => row[String]("auth_token")).toList.size>0
-    }
-  }
-
-  /**
-   *  Retrieve a User from token.
-   */
-  def findByToken(token: String):Option[User] = {
+  def findAllZoneName(_id:Long) = {
     DB.withConnection { implicit connection =>
-      SQL("select * from configuration.user where auth_token = {token}").on(
-        'token -> token
-      ).as(User.simpleParser.singleOpt)
+      SQL(
+        """
+          select id_zone from configuration.user2zone where id_user = {_id}
+        """
+      ).on('_id -> _id)().map(row => row[String]("id_zone")).toList
     }
   }
 
-  /**
-   *  Delete token when user logged out.
-   */
-   def deleteToken(token: String) = {
-    DB.withConnection{ implicit connection =>
-      SQL("update configuration.user set auth_token = null where auth_token = {token}").on(
-         'token -> token
-      ).executeUpdate()
-    }
-  }
 }

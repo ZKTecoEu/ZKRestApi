@@ -2,8 +2,9 @@ package controllers
 
 import java.util.Random
 
+import formatters.DataFormatter.JsonDataFormatter
 import models.{Client, ClientForm, User}
-import play.api.libs.json.Json
+import play.api.libs.json.{JsValue, JsArray, Json}
 import play.api.libs.json.Json.toJson
 import play.api.mvc._
 import utils.Authenticated
@@ -26,6 +27,14 @@ object Application extends Controller {
 
   def index = Authenticated { request =>
     Ok(Json.obj("userName" -> request.user.email))
+  }
+
+  def zones = Authenticated { request =>
+    val jsonList = scala.collection.mutable.MutableList[JsValue]()
+    User.findAllZoneName(request.user._id) foreach {
+      zoneName => jsonList += JsonDataFormatter.writes(Map("zone_name"->zoneName))
+    }
+    Ok(new JsArray(scala.collection.mutable.ArraySeq(jsonList:_*)))
   }
 
   def options(url: String) = Action {

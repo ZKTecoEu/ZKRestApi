@@ -27,6 +27,8 @@ POST           /users/:id                        controllers.Application.removeU
 GET            /users                            controllers.Application.users
 GET            /clients                          controllers.Application.clients
 
+# Get user's zone list
+GET            /user/zones                       controllers.Application.zones
 
 # Map static resources from the /public folder to the /assets URL path
 GET            /assets/*file                     controllers.Assets.at(path="/public", file)
