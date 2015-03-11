@@ -10,17 +10,21 @@ import models._
 import play.api.libs.json.JsValue
 import play.api.libs.json.Json.toJson
 import play.api.mvc._
-import utils.JsonNotFound
+import utils.{JsonErrorAction, JsonNotFound}
+import formatters.LoginCombinationFormatter._
 
 @Api(value = "/br/employee", description = "Employee Operations")
 object Employees extends Controller {
 
-  @ApiOperation(nickname = "getEmployeeById", value = "Find employee by Id", notes = "Returns employee according to Id",
-    httpMethod = "GET", response = classOf[models.Employee])
-  def details(@ApiParam(value = "Id of employee") @PathParam("id") id: Long) = Authenticated { request =>
-    Employee.findById(id, User.findZoneName(request.user._id)).map {
-      employee => Ok(toJson(employee))
-    }.getOrElse(JsonNotFound("Employee with id %s not found".format(id)))
+  @ApiOperation(nickname = "getEmployeeById" , value = "Find employee by Id" , notes = "Returns employee according to Id",
+    httpMethod = "GET" , response = classOf[models.Employee])
+  def details(@ApiParam(value = "Id of employee") @PathParam("id") id: Long,zone_name:String) = Authenticated { request =>
+    if(User.findAllZoneName(request.user._id).contains(zone_name)){
+      Employee.findById(id, zone_name).map {
+        employee => Ok(toJson(employee))
+      }.getOrElse(JsonNotFound("Employee with id %s not found".format(id)))
+    }
+      else JsonErrorAction(request.user.username+" is not belonged to the "+zone_name)
   }
 
   val create = Action {
@@ -40,17 +44,20 @@ object Employees extends Controller {
    * @return
    */
   //TODO fix finding employee from pin what if only card is sent for validation?
-  @ApiOperation(nickname = "validateEmployee", value = "Validate employee", notes = "Checks employee login combination is defined or not." +
-    "You can check response class section in order to find out which values need to be sent in a json object.",
-    httpMethod = "POST", response = classOf[models.LoginCombination])
-  def validate = Authenticated { request =>
-    var result: JsValue = null
-    request.body.asJson.map { json =>
-      json.asOpt[LoginCombination].map { loginCombination =>
-        result = convert(Employee.checkData(loginCombination, User.findZoneName(request.user._id)))
+  @ApiOperation(nickname = "validateEmployee" , value = "Validate employee" , notes = "Checks employee login combination is defined or not." +
+    "You can check response class section in order to find out which values need to be sent in a json object." ,
+    httpMethod = "POST" , response = classOf[models.LoginCombination])
+  def validate(zone_name:String) = Authenticated { request =>
+    if(User.findAllZoneName(request.user._id).contains(zone_name)){
+    var result:JsValue = null
+      request.body.asJson.map{ json =>
+        json.asOpt[LoginCombination].map {  loginCombination =>
+          result = convert(Employee.checkData(loginCombination,zone_name))
       }
     }
     Ok(result)
+    }
+    else JsonErrorAction(request.user.username+" is not belonged to the "+zone_name)
   }
 
   /**
