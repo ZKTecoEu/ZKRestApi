@@ -2,12 +2,12 @@ package controllers
 
 import java.util.Random
 
+import controllers.ActionBuilders.Authenticated
 import formatters.DataFormatter.JsonDataFormatter
 import models.{Client, ClientForm, User}
 import play.api.libs.json.{JsValue, JsArray, Json}
 import play.api.libs.json.Json.toJson
 import play.api.mvc._
-import utils.Authenticated
 
 object Application extends Controller {
 

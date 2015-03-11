@@ -2,16 +2,18 @@ package controllers.br
 
 import javax.ws.rs.PathParam
 
-import com.wordnik.swagger.annotations.{ApiParam, ApiOperation, Api}
+import com.wordnik.swagger.annotations.{Api, ApiOperation, ApiParam}
+import controllers.ActionBuilders.Authenticated
 import formatters.EmployeeFormatter._
+import formatters.LoginCombinationFormatter._
 import models._
 import play.api.libs.json.JsValue
 import play.api.libs.json.Json.toJson
 import play.api.mvc._
-import utils.{JsonErrorAction, Authenticated, JsonNotFound}
+import utils.{JsonErrorAction, JsonNotFound}
 import formatters.LoginCombinationFormatter._
 
-@Api(value = "/br/employee" , description = "Employee Operations")
+@Api(value = "/br/employee", description = "Employee Operations")
 object Employees extends Controller {
 
   @ApiOperation(nickname = "getEmployeeById" , value = "Find employee by Id" , notes = "Returns employee according to Id",
@@ -25,9 +27,15 @@ object Employees extends Controller {
       else JsonErrorAction(request.user.username+" is not belonged to the "+zone_name)
   }
 
-  val create = Action {NotImplemented}
-  val update = Action {NotImplemented}
-  val delete = Action {NotImplemented}
+  val create = Action {
+    NotImplemented
+  }
+  val update = Action {
+    NotImplemented
+  }
+  val delete = Action {
+    NotImplemented
+  }
 
   /**
    * Function takes parameters from json body in order to check this employee
@@ -58,8 +66,8 @@ object Employees extends Controller {
    * @param employee
    * @return
    */
-  def convert(employee:Option[Employee]):JsValue = {
-    if(employee==null)
+  def convert(employee: Option[Employee]): JsValue = {
+    if (employee == null)
       toJson("Employee could not was validated")
     else
       toJson(employee)
