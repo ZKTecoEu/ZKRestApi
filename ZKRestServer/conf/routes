@@ -7,10 +7,10 @@ OPTIONS        /*url                             controllers.Application.options
 GET            /api-docs                         controllers.ApiHelpController.getResources
 
 # Home page
-GET            /                                 controllers.Security.login
 GET            /index                            controllers.Application.index
-GET            /login                            controllers.Security.login
-GET            /logout                           controllers.Security.logout
+#GET            /                                 controllers.Security.login
+#GET            /login                            controllers.Security.login
+#GET            /logout                           controllers.Security.logout
 GET            /help                             controllers.Application.swagger
 
 #Javascript Routes
@@ -54,7 +54,7 @@ POST           /oauth2/access_token              controllers.Security.accessToke
 GET            /api-docs/br/employee             controllers.ApiHelpController.getResource(path = "/br/employee")
 
 # Get Employee
-GET            /:zone_name/br/employee/:id       controllers.br.Employees.details(id: Long,zone_name:String)
+GET            /:zone_name/br/employee/:id       controllers.br.Employees.get(zone_name:String, id: Long)
 # Create
 #POST           /employee/:zone_name/           controllers.br.Employees.details(id: Long)
 # Update
@@ -72,10 +72,10 @@ POST           /:zone_name/br/attendancelog      controllers.br.AttendanceLogs.i
 GET            /api-docs/br/query                controllers.ApiHelpController.getResource(path = "/br/query")
 
 # Custom Query without parameter
-GET            /:zone_name/br/query/:query_name  controllers.br.CustomQueries.queryWithoutParams(query_name:String,zone_name:String)
+GET            /:zone_name/br/query/:query_name  controllers.br.CustomQueries.queryWithoutParams(zone_name:String, query_name:String)
 
 # Custom Query with parameters
-POST           /:zone_name/br/query/:query_name  controllers.br.CustomQueries.queryWithParams(query_name:String,zone_name:String)
+POST           /:zone_name/br/query/:query_name  controllers.br.CustomQueries.queryWithParams(zone_name:String, query_name:String)
 
 ##################
 #NON BUSINESS RELATED
@@ -84,9 +84,9 @@ POST           /:zone_name/br/query/:query_name  controllers.br.CustomQueries.qu
 GET            /api-docs/data                    controllers.ApiHelpController.getResource(path = "/data")
 
 # Get all data
-GET            /:zone_name/data/:table_name      controllers.nbr.Data.showAll(table_name: String,zone_name:String)
+GET            /:zone_name/data/:table_name      controllers.nbr.Data.showAll(zone_name:String, table_name: String)
 # Raw data access
-GET            /:zone_name/data/:table_name/:id  controllers.nbr.Data.show(table_name :String,id: Long,zone_name:String)
+GET            /:zone_name/data/:table_name/:id  controllers.nbr.Data.show(zone_name:String, table_name :String,id: Long)
 
 
 

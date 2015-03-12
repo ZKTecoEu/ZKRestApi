@@ -20,7 +20,7 @@ object CustomQueries extends Controller {
     notes = "Executes query according to parameters and responses result." +
       "Because of not being a static data model,you need to send parameters according to your query's requirements." +
       "You should send your parameters in x-www-form-urlencoded format." ,httpMethod = "POST" , response = classOf[Object])
-  def queryWithParams(@ApiParam(value = "Name of query") @PathParam("query_name") query_name: String,zone_name:String) = Authenticated { request =>
+  def queryWithParams(zone_name:String, @ApiParam(value = "Name of query") @PathParam("query_name") query_name: String) = Authenticated { request =>
     if(User.findAllZoneName(request.user._id).contains(zone_name)) {
       var map: Map[String, Any] = Map()
       request.body.asFormUrlEncoded.get foreach {
@@ -44,7 +44,7 @@ object CustomQueries extends Controller {
 
   @ApiOperation(nickname = "executeQueryWithoutParam" , value = "Execute query without parameter" ,
     notes =  "Executes query and responses result", httpMethod = "GET" , response = classOf[Object])
-  def queryWithoutParams(@ApiParam(value = "Name of query") @PathParam("query_name") query_name: String,zone_name:String) = Authenticated { request =>
+  def queryWithoutParams(zone_name:String, @ApiParam(value = "Name of query") @PathParam("query_name") query_name: String) = Authenticated { request =>
       //val zone_name = User.findZoneName(request.user._id)
     if(User.findAllZoneName(request.user._id).contains(zone_name)) {
       val query = CustomQueriesGenerator.queryMap.getOrElse(query_name, "not found")

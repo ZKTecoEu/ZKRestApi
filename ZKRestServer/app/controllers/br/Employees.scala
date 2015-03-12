@@ -11,14 +11,13 @@ import play.api.libs.json.JsValue
 import play.api.libs.json.Json.toJson
 import play.api.mvc._
 import utils.{JsonErrorAction, JsonNotFound}
-import formatters.LoginCombinationFormatter._
 
 @Api(value = "/br/employee", description = "Employee Operations")
 object Employees extends Controller {
 
   @ApiOperation(nickname = "getEmployeeById" , value = "Find employee by Id" , notes = "Returns employee according to Id",
     httpMethod = "GET" , response = classOf[models.Employee])
-  def details(@ApiParam(value = "Id of employee") @PathParam("id") id: Long,zone_name:String) = Authenticated { request =>
+  def get(zone_name: String, @ApiParam(value = "Id of employee") @PathParam("id") id: Long) = Authenticated { request =>
     if(User.findAllZoneName(request.user._id).contains(zone_name)){
       Employee.findById(id, zone_name).map {
         employee => Ok(toJson(employee))
