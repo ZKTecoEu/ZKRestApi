@@ -13,7 +13,7 @@ libraryDependencies ++= Seq(
   anorm,
   cache,
   "com.nulab-inc" %% "play2-oauth2-provider" % "0.12.1",
-  "com.typesafe.play" %% "play-slick" % "0.8.1",
+  "com.typesafe.slick" %% "slick" % "2.1.0",
   "com.wordnik" %% "swagger-play2" % "1.3.12"
 )
 
