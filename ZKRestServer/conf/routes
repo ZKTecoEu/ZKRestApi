@@ -84,9 +84,9 @@ POST           /:zone_name/br/query/:query_name  controllers.br.CustomQueries.qu
 GET            /api-docs/data                    controllers.ApiHelpController.getResource(path = "/data")
 
 # Get all data
-GET            /data/:table_name                 controllers.nbr.Data.showAll(table_name: String)
+GET            /:zone_name/data/:table_name      controllers.nbr.Data.showAll(table_name: String,zone_name:String)
 # Raw data access
-GET            /data/:table_name/:id             controllers.nbr.Data.show(table_name :String,id: Long)
+GET            /:zone_name/data/:table_name/:id  controllers.nbr.Data.show(table_name :String,id: Long,zone_name:String)
 
 
 
