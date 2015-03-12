@@ -11,7 +11,7 @@ GET            /                                 controllers.Security.login
 GET            /index                            controllers.Application.index
 GET            /login                            controllers.Security.login
 GET            /logout                           controllers.Security.logout
-GET            /swagger                          controllers.Application.swagger
+GET            /help                             controllers.Application.swagger
 
 #Javascript Routes
 GET            /javascriptRoutes                 controllers.JavascriptRoute.javascriptRoutes
