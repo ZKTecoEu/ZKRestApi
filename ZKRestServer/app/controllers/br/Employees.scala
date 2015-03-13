@@ -19,7 +19,7 @@ object Employees extends Controller {
     httpMethod = "GET" , response = classOf[models.Employee])
   def get(zone_name: String, @ApiParam(value = "Id of employee") @PathParam("id") id: Long) = Authenticated { request =>
     if(User.findAllZoneName(request.user._id).contains(zone_name)){
-      Employee.findById(zone_name, id).map {
+      Employee.getById(zone_name, id).map {
         employee => Ok(toJson(employee))
       }.getOrElse(JsonNotFound("Employee with id %s not found".format(id)))
     }
@@ -51,7 +51,7 @@ object Employees extends Controller {
     var result:JsValue = null
       request.body.asJson.map{ json =>
         json.asOpt[LoginCombination].map {  loginCombination =>
-          result = convert(Employee.checkData(loginCombination,zone_name))
+          result = convert(Employee.checkData(zone_name, loginCombination))
       }
     }
     Ok(result)
