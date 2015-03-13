@@ -91,12 +91,12 @@ object Employee extends EntityCompanion[Employee] {
     }
   }
 
-  def findById(_id: Long, zoneName: String): Option[Employee] = {
+  def findById(zoneName: String, _id: Long): Option[Employee] = {
     DB.withConnection { implicit connection =>
       SQL(
-        """
-          select * from """ + zoneName + """.employee where employee._id = {_id}
-                                         """
+        """select * 
+          from """ + zoneName + """.employee 
+          where employee._id = {_id}"""
       ).on(
           '_id -> _id
         ).as(simpleParser.singleOpt)
@@ -109,7 +109,7 @@ object Employee extends EntityCompanion[Employee] {
     if (chechEnabled(empId,zoneName)) {
       if (checkEmployeeLogin(login, empId,zoneName)) {
         if (LoginCombinationHelper.checkCombinations(login, empId ,zoneName)) {
-          employee = findById(empId, zoneName)
+          employee = findById(zoneName, empId)
         }
       }
     }

@@ -8,9 +8,9 @@ GET            /api-docs                         controllers.ApiHelpController.g
 
 # Home page
 GET            /index                            controllers.Application.index
-#GET            /                                 controllers.Security.login
-#GET            /login                            controllers.Security.login
-#GET            /logout                           controllers.Security.logout
+GET            /                                 controllers.Security.login
+GET            /login                            controllers.Security.login
+GET            /logout                           controllers.Security.logout
 GET            /help                             controllers.Application.swagger
 
 #Javascript Routes

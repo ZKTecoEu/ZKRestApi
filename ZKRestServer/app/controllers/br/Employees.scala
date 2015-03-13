@@ -19,7 +19,7 @@ object Employees extends Controller {
     httpMethod = "GET" , response = classOf[models.Employee])
   def get(zone_name: String, @ApiParam(value = "Id of employee") @PathParam("id") id: Long) = Authenticated { request =>
     if(User.findAllZoneName(request.user._id).contains(zone_name)){
-      Employee.findById(id, zone_name).map {
+      Employee.findById(zone_name, id).map {
         employee => Ok(toJson(employee))
       }.getOrElse(JsonNotFound("Employee with id %s not found".format(id)))
     }
