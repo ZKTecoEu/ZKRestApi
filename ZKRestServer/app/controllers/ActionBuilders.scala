@@ -3,7 +3,6 @@ package controllers
 import models.User
 import oauth2.OauthDataHandler
 import play.api
-import play.api.Logger
 import play.api.mvc._
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -11,14 +10,11 @@ import scala.concurrent.Future
 import scalaoauth2.provider.OAuth2Provider
 
 
-//object AuthActionBuilder extends ActionBuilder[Request] {
-//  override def invokeBlock[A](request: Request[A], block: (Request[A]) => Future[Result]): Future[Result] = {
-//    Logger.info("Calling action")
-//    block(request)
-//  }
-//}
-
-
+/**
+ * Controller class for all the ActionBuilders
+ *
+ * @author william.merino@zktechnology.eu
+ */
 object ActionBuilders extends Controller with OAuth2Provider {
 
 
@@ -28,12 +24,11 @@ object ActionBuilders extends Controller with OAuth2Provider {
    */
   case class AuthenticatedRequest[A](user: User, request: Request[A]) extends WrappedRequest(request)
 
-  def authenticate[A](block: AuthenticatedRequest[A] => Future[Result])(implicit request: Request[A]) = {
-    authorize(new OauthDataHandler()) { authInfo =>
-      block(AuthenticatedRequest(authInfo.user, request))
-    }
-  }
 
+
+  /**
+   * Action Builder for Authenticated Requests, it returns the current user.
+   */
   object Authenticated extends api.mvc.ActionBuilder[AuthenticatedRequest]  {
 
     def invokeBlock[A](request: Request[A], block: AuthenticatedRequest[A] => Future[Result]) = {
@@ -41,12 +36,48 @@ object ActionBuilders extends Controller with OAuth2Provider {
     }
   }
 
-  case class Logging[A](action: Action[A]) extends Action[A] {
-    def apply(request: Request[A]): Future[SimpleResult] = {
-      Logger.info("Calling action")
-      action(request)
+
+  /**
+   * Performs an authentication and checks if the input zone is valid.
+   * @param block
+   * @param zoneName
+   * @param request
+   * @tparam A
+   * @return
+   */
+  private def authenticateAndCheckZone[A]( block: AuthenticatedRequest[A] => Future[Result],zoneName:String)(implicit request: Request[A]) = {
+    authorize(new OauthDataHandler()) { authInfo =>
+      if(User.findAllZoneName(authInfo.user._id).contains(zoneName))
+        block(AuthenticatedRequest(authInfo.user, request))
+      else
+        Future.successful(Unauthorized)
     }
-    lazy val parser = action.parser
+  }
+
+  /**
+   * Performs an authentication
+   * @param block
+   * @param request
+   * @tparam A
+   * @return
+   */
+  private def authenticate[A](block: AuthenticatedRequest[A] => Future[Result])(implicit request: Request[A]) = {
+    authorize(new OauthDataHandler()) { authInfo =>
+      block(AuthenticatedRequest(authInfo.user, request))
+    }
+  }
+
+  /**
+   * Action Builder for Authenticated requests and also checking if the user belongs to the zone
+   * @param zoneName
+   * @return
+   */
+  def AuthenticatedZone(zoneName:String) = new ActionBuilder[AuthenticatedRequest] {
+    def invokeBlock[A](request: Request[A], block: (AuthenticatedRequest[A]) => Future[Result]) = {
+      authenticateAndCheckZone(block,zoneName)(request)
+    }
+
+
   }
 
 

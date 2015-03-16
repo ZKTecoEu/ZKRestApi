@@ -91,32 +91,44 @@ object Employee extends EntityCompanion[Employee] {
     }
   }
 
-  def findById(_id: Long, zoneName: String): Option[Employee] = {
+  /**
+   * Retrieves an employee
+   * @param zoneName
+   * @param _id
+   * @return
+   */
+  def getById(zoneName: String, _id: Long): Option[Employee] = {
     DB.withConnection { implicit connection =>
       SQL(
-        """
-          select * from """ + zoneName + """.employee where employee._id = {_id}
-                                         """
+        """select * 
+          from """ + zoneName + """.employee 
+          where employee._id = {_id}"""
       ).on(
           '_id -> _id
         ).as(simpleParser.singleOpt)
     }
   }
 
-  def checkData(login: LoginCombination, zoneName: String) = {
+  def checkData(zoneName: String, login: LoginCombination) = {
     val empId = findEmployeeId(login.pin,zoneName)
     var employee: Option[Employee] = null
-    if (chechEnabled(empId,zoneName)) {
-      if (checkEmployeeLogin(login, empId,zoneName)) {
+    if (isEnabled(zoneName, empId)) {
+      if (checkEmployeeLogin(zoneName, login, empId)) {
         if (LoginCombinationHelper.checkCombinations(login, empId ,zoneName)) {
-          employee = findById(empId, zoneName)
+          employee = getById(zoneName, empId)
         }
       }
     }
     employee
   }
 
-  def findEmployeeId(pin: String,zoneName: String): Long = {
+  /**
+   * Find an employee id based on the pin
+   * @param zoneName
+   * @param pin
+   * @return
+   */
+ private def findEmployeeId(zoneName: String, pin: String): Long = {
     DB.withConnection { implicit connection =>
       SQL(
         "select _id from "+zoneName+".employee where pin = {pin}"
@@ -126,7 +138,13 @@ object Employee extends EntityCompanion[Employee] {
 
   }
 
-  def chechEnabled(_id: Long,zoneName: String): Boolean = {
+  /**
+   * Checks if the employee is enabled
+   * @param zoneName
+   * @param _id
+   * @return
+   */
+  def isEnabled(zoneName: String, _id: Long): Boolean = {
     DB.withConnection { implicit connection =>
       SQL(
         "select enabled from "+zoneName+".entity where _id = {_id}"
@@ -135,28 +153,35 @@ object Employee extends EntityCompanion[Employee] {
     }
   }
 
-  def checkEmployeeLogin(login: LoginCombination, empId: Long, zoneName:String) = {
+  /**
+   *
+   * @param zoneName
+   * @param login
+   * @param empId
+   * @return
+   */
+  private def checkEmployeeLogin(zoneName:String, login: LoginCombination, empId: Long) = {
 
     var validationList: MutableList[Boolean] = MutableList()
 
     if (!login.pwd.isEmpty) {
-      validationList += HashFactory.check(login.pwd, findEmployeePWD(empId, 1 ,zoneName))
+      validationList += HashFactory.check(login.pwd, findEmployeePWD(zoneName, empId, 1))
     }
     if (!login.fp.isEmpty) {
-      validationList += checkLogin(empId, 2, login.fp,zoneName)
+      validationList += checkLogin(zoneName, empId, 2, login.fp)
     }
     if (!login.card.isEmpty) {
-      validationList += checkLogin(empId, 3, login.card,zoneName)
+      validationList += checkLogin(zoneName, empId, 3, login.card)
     }
     if (!login.face.isEmpty) {
-      validationList += checkLogin(empId, 4, login.face,zoneName)
+      validationList += checkLogin(zoneName, empId, 4, login.face)
     }
 
     !mutableSeqAsJavaListConverter(validationList).asJava.contains(false) && validationList.size > 0
 
   }
 
-  def checkLogin(id_employee: Long, id_login: Long, value: String , zoneName:String) = {
+  def checkLogin(zoneName: String, id_employee: Long, id_login: Long, value: String) = {
     val query =
       "select id_login from "+zoneName+".employee_login where "+
         "id_employee = {id_employee} and id_login = {id_login} "+
@@ -171,7 +196,7 @@ object Employee extends EntityCompanion[Employee] {
     }
   }
 
-  def findEmployeePWD(id_employee: Long, id_login: Long,zoneName:String) = {
+  private def findEmployeePWD(zoneName: String, id_employee: Long, id_login: Long): String = {
     val query =
          "select value from "+zoneName+".employee_login where "+
          "id_employee = {id_employee} and id_login = {id_login}"
