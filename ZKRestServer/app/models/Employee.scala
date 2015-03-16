@@ -12,9 +12,9 @@ import scala.collection.mutable._
 
 
 case class Employee(
-                      _id: Pk[Long] = NotAssigned,
+                     _id: Pk[Long] = NotAssigned,
 
-                      first_name: String = "unknown name",
+                     first_name: String = "unknown name",
                      last_name: Option[String] = Option(""),
                      pin: String = "unknown pin",
                      birth_date: Option[Long] = Option(0),
@@ -23,7 +23,9 @@ case class Employee(
                      phone: Option[String] = Option(""),
                      email: Option[String] = Option(""),
                      photo: Option[String] = Option(""),
-                     national_id: Option[String] = Option("")
+                     national_id: Option[String] = Option(""),
+                     department: Option[String] = Option(""),
+                     enabled: Option[Boolean] = Option(true)
                      ) extends Entity {
   def asSeq(): Seq[(String, Any)] = Seq(
     "_id" -> pkToLong(_id),
@@ -36,7 +38,9 @@ case class Employee(
     "phone" -> phone,
     "email" -> email,
     "photo" -> photo,
-    "national_id" -> national_id
+    "national_id" -> national_id,
+    "department" -> department,
+    "enabled" -> enabled
   )
 }
 
@@ -91,6 +95,7 @@ object Employee extends EntityCompanion[Employee] {
     }
   }
 
+
   /**
    * Retrieves an employee
    * @param zoneName
@@ -99,113 +104,129 @@ object Employee extends EntityCompanion[Employee] {
    */
   def getById(zoneName: String, _id: Long): Option[Employee] = {
     DB.withConnection { implicit connection =>
-      SQL(
-        """select * 
-          from """ + zoneName + """.employee 
+        SQL(
+          """select *
+          from #$zoneName.employee
           where employee._id = {_id}"""
-      ).on(
-          '_id -> _id
-        ).as(simpleParser.singleOpt)
-    }
-  }
-
-  def checkData(zoneName: String, login: LoginCombination) = {
-    val empId = findEmployeeId(login.pin,zoneName)
-    var employee: Option[Employee] = null
-    if (isEnabled(zoneName, empId)) {
-      if (checkEmployeeLogin(zoneName, login, empId)) {
-        if (LoginCombinationHelper.checkCombinations(login, empId ,zoneName)) {
-          employee = getById(zoneName, empId)
-        }
+        ).on(
+            '_id -> _id
+          ).as(simpleParser.singleOpt)
       }
     }
-    employee
-  }
 
-  /**
-   * Find an employee id based on the pin
-   * @param zoneName
-   * @param pin
-   * @return
-   */
- private def findEmployeeId(zoneName: String, pin: String): Long = {
-    DB.withConnection { implicit connection =>
-      SQL(
-        "select _id from "+zoneName+".employee where pin = {pin}"
+    def checkData(zoneName: String, login: LoginCombination) = {
+      val empId = findEmployeeId(login.pin, zoneName)
+      var employee: Option[Employee] = null
+      if (isEnabled(zoneName, empId)) {
+        if (checkEmployeeLogin(zoneName, login, empId)) {
+          if (LoginCombinationHelper.checkCombinations(login, empId, zoneName)) {
+            employee = getById(zoneName, empId)
+          }
+        }
+      }
+      employee
+    }
+
+    /**
+     * Find an employee id based on the pin
+     * @param zoneName
+     * @param pin
+     * @return
+     */
+    private def findEmployeeId(zoneName: String, pin: String): Long =
+    {
+      DB.withConnection { implicit connection =>
+        SQL(
+          "select _id from " + zoneName + ".employee where pin = {pin}"
         ).on('pin -> pin)().map(row => row[Long]("_id")).toList.head
 
+      }
+
     }
 
-  }
-
-  /**
-   * Checks if the employee is enabled
-   * @param zoneName
-   * @param _id
-   * @return
-   */
-  def isEnabled(zoneName: String, _id: Long): Boolean = {
-    DB.withConnection { implicit connection =>
-      SQL(
-        "select enabled from "+zoneName+".entity where _id = {_id}"
+    /**
+     * Checks if the employee is enabled
+     * @param zoneName
+     * @param _id
+     * @return
+     */
+    def isEnabled(zoneName: String, _id: Long): Boolean = {
+      DB.withConnection { implicit connection =>
+        SQL(
+          "select enabled from " + zoneName + ".entity where _id = {_id}"
         ).on('_id -> _id)().map(row => row[Int]("enabled")).toList.head == 1
 
+      }
     }
+
+    /**
+     *
+     * @param zoneName
+     * @param login
+     * @param empId
+     * @return
+     */
+    private def checkEmployeeLogin(zoneName: String, login: LoginCombination, empId: Long) =
+    {
+
+      var validationList: MutableList[Boolean] = MutableList()
+
+      if (!login.pwd.isEmpty) {
+        validationList += HashFactory.check(login.pwd, findEmployeePWD(zoneName, empId, 1))
+      }
+      if (!login.fp.isEmpty) {
+        validationList += checkLogin(zoneName, empId, 2, login.fp)
+      }
+      if (!login.card.isEmpty) {
+        validationList += checkLogin(zoneName, empId, 3, login.card)
+      }
+      if (!login.face.isEmpty) {
+        validationList += checkLogin(zoneName, empId, 4, login.face)
+      }
+
+      !mutableSeqAsJavaListConverter(validationList).asJava.contains(false) && validationList.size > 0
+
+    }
+
+    def checkLogin(zoneName: String, id_employee: Long, id_login: Long, value: String) = {
+      val query =
+        "select id_login from " + zoneName + ".employee_login where " +
+          "id_employee = {id_employee} and id_login = {id_login} " +
+          "and value = {value}"
+
+
+      DB.withConnection { implicit connection =>
+        SQL(query).on('id_employee -> id_employee,
+          'id_login -> id_login,
+          'value -> value)().map(row => row[Long]("id_login")).toList.size > 0
+
+      }
+    }
+
+    private def findEmployeePWD(zoneName: String, id_employee: Long, id_login: Long): String =
+    {
+      val query =
+        "select value from " + zoneName + ".employee_login where " +
+          "id_employee = {id_employee} and id_login = {id_login}"
+
+      DB.withConnection { implicit connection =>
+        SQL(query).on('id_employee -> id_employee,
+          'id_login -> id_login)().map(row => row[String]("value")).toList.head.toString
+
+      }
+    }
+
+    def getEmployeeList(zoneName: String, limit: Int)/*:Seq[Employee]*/ = {
+      DB.withConnection { implicit connection =>
+        SQL("""
+       SELECT em.*, en.enabled, eg.name
+        FROM #$zoneName.employee em, #$zoneName.entity en, #$zoneName.entity_group eg, #$zoneName.entity_hierarchy eh
+        WHERE em._id = en._id
+        AND em._id = eh.id_entity
+        AND eg._id = eh.id_parent
+        ORDER BY pin
+        LIMIT #$limit """).as(simpleParser *)
+      }
+    }
+
   }
-
-  /**
-   *
-   * @param zoneName
-   * @param login
-   * @param empId
-   * @return
-   */
-  private def checkEmployeeLogin(zoneName:String, login: LoginCombination, empId: Long) = {
-
-    var validationList: MutableList[Boolean] = MutableList()
-
-    if (!login.pwd.isEmpty) {
-      validationList += HashFactory.check(login.pwd, findEmployeePWD(zoneName, empId, 1))
-    }
-    if (!login.fp.isEmpty) {
-      validationList += checkLogin(zoneName, empId, 2, login.fp)
-    }
-    if (!login.card.isEmpty) {
-      validationList += checkLogin(zoneName, empId, 3, login.card)
-    }
-    if (!login.face.isEmpty) {
-      validationList += checkLogin(zoneName, empId, 4, login.face)
-    }
-
-    !mutableSeqAsJavaListConverter(validationList).asJava.contains(false) && validationList.size > 0
-
-  }
-
-  def checkLogin(zoneName: String, id_employee: Long, id_login: Long, value: String) = {
-    val query =
-      "select id_login from "+zoneName+".employee_login where "+
-        "id_employee = {id_employee} and id_login = {id_login} "+
-         "and value = {value}"
-
-
-    DB.withConnection { implicit connection =>
-      SQL(query).on('id_employee -> id_employee,
-        'id_login -> id_login,
-        'value -> value)().map(row => row[Long]("id_login")).toList.size > 0
-
-    }
-  }
-
-  private def findEmployeePWD(zoneName: String, id_employee: Long, id_login: Long): String = {
-    val query =
-         "select value from "+zoneName+".employee_login where "+
-         "id_employee = {id_employee} and id_login = {id_login}"
-
-
-    DB.withConnection { implicit connection =>
-      SQL(query).on('id_employee -> id_employee,
-        'id_login -> id_login)().map(row => row[String]("value")).toList.head.toString
-
-    }
-  }
-}
