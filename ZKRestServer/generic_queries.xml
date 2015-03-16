@@ -916,4 +916,24 @@ where al.id_employee = e._id and al.id_attendance_event = ae._id and e._id = vh.
 		<statement><![CDATA[select _id, name from entity_group where _id=?id]]></statement>
 	</query>
 
+    <query name="employeesWithDepartment" >
+        <statement><![CDATA[select e.*,gr.name from employee e
+					 left join entity_hierarchy hr on e._id =hr.id_entity
+					 left join entity_group gr on hr.id_parent = gr._id]]></statement>
+    </query>
+
+    <query name="logsWithDetails" >
+        <statement><![CDATA[SELECT al._id,  al.date, al.status,
+			  al.id_device, e.pin, e.first_name, e.last_name,  ae.name as att_name
+			  FROM attendance_log al, employee e, attendance_event ae
+			  WHERE al.id_attendance_event = ae._id
+			  AND al.id_employee = e._id
+			  union all
+			  SELECT al._id, al.date, al.status,
+			  al.id_device, e.pin,e.first_name, e.last_name,  'Other' as att_name
+			  FROM attendance_log al, employee e
+			  WHERE al.id_employee = e._id
+			  AND al.id_attendance_event is null]]></statement>
+    </query>
+
 </queries>
