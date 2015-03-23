@@ -79,6 +79,13 @@ object Employee extends EntityCompanion[Employee] {
 
   val tableName = "employee"
 
+  //TODO gmerino: this enables SQL injection and should be fixed, solution proposals can be found here:
+  // http://stackoverflow.com/questions/29028122/best-way-to-pass-the-schema-name-as-a-variable-to-a-query
+  /**
+   * Retrieves the basic query to get employee data. This information can be parsed with simpleParser
+   * @param zoneName
+   * @return
+   */
   private def getEmployeeDefaultQuery(zoneName: String) : String =
     """
        SELECT em.*, en.enabled  as enabled, eg.name as department
