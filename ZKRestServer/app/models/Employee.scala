@@ -95,6 +95,10 @@ object Employee extends EntityCompanion[Employee] {
        AND eg._id = eh.id_parent
     """
 
+  implicit def bool2int(b:Boolean) = if (b) 1 else 0
+
+  implicit def int2bool(i:Int) = i == 1
+
   val simpleParser: RowParser[Employee] = {
     get[Pk[Long]]("employee._id") ~
       get[String]("employee.first_name") ~
@@ -112,7 +116,10 @@ object Employee extends EntityCompanion[Employee] {
       case _id ~ first_name ~ last_name ~ pin ~ birth_date ~ address ~ gender
         ~ phone ~ email ~ photo ~ national_id ~ department ~ enabled => fromParser(
         _id, first_name, last_name, pin, birth_date, address, gender, phone, email
-        , photo, national_id, department, Option(enabled == 1)
+        , photo, national_id, department, enabled match {
+          case Some(enabled) => Option(enabled == 1)
+          case None => Option(false)
+        }
       )
     }
   }
