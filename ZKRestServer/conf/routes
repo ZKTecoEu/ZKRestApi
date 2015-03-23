@@ -54,7 +54,8 @@ POST           /oauth2/access_token              controllers.Security.accessToke
 GET            /api-docs/br/employee             controllers.ApiHelpController.getResource(path = "/br/employee")
 
 # Get Employee
-GET            /:zone_name/br/employee/:id       controllers.br.Employees.get(zone_name:String, id: Long)
+GET            /:zone_name/br/employee/:id       controllers.br.Employees.getEmployee(zone_name:String, id: Long)
+GET            /:zone_name/br/employee/          controllers.br.Employees.get(zone_name:String)
 # Create
 #POST           /employee/:zone_name/           controllers.br.Employees.details(id: Long)
 # Update

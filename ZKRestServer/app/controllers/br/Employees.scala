@@ -5,11 +5,13 @@ import javax.ws.rs.PathParam
 import com.wordnik.swagger.annotations.{Api, ApiOperation, ApiParam}
 import controllers.ActionBuilders.{Authenticated, AuthenticatedZone}
 import formatters.LoginCombinationFormatter._
+import formatters.EmployeeFormatter._
 import models._
 import play.api.libs.json.JsValue
 import play.api.libs.json.Json.toJson
 import play.api.mvc._
 import utils.{JsonErrorAction, JsonNotFound}
+
 
 @Api(value = "/br/employee", description = "Employee Operations")
 object Employees extends Controller {
