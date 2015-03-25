@@ -7,6 +7,7 @@ import controllers.ActionBuilders.{Authenticated, AuthenticatedZone}
 import formatters.LoginCombinationFormatter._
 import formatters.EmployeeFormatter._
 import models._
+import play.api.Logger
 import play.api.libs.json.JsValue
 import play.api.libs.json.Json.toJson
 import play.api.mvc._
@@ -32,9 +33,41 @@ object Employees extends Controller {
   val create = Action {
     NotImplemented
   }
-  val update = Action {
-    NotImplemented
+  def update(zoneName: String) = AuthenticatedZone(zoneName) { request =>
+    Logger.info("Entrada ")
+
+    request.body match {
+      case AnyContentAsJson(json) => Logger.info("json is "+json)
+      case _ => Logger.info("body is none")
+    }
+
+    request.body.asJson.map { json =>
+      Logger.info("body as json ")
+      json.asOpt[Employee].map {employee =>
+        Logger.info("json as opt ")
+        Employee.updateEmployee(zoneName, employee)
+        //TODO ZKProto
+        Logger.info("Updated ")
+        Ok("Updated Dentro")
+      }
+    }
+    Ok("Updated")
   }
+
+  /*
+  * def insertAttendanceLog(zone_name:String) = Authenticated { request =>
+    if(User.findAllZoneName(request.user._id).contains(zone_name)){
+      request.body.asJson.map{ json =>
+        json.asOpt[AttendanceLog].map{ attendanceLog =>
+          //val zoneName = User.findZoneName(request.user._id)
+          DBHelper.insert(SQLHelper.insertAttendanceQuery(attendanceLog,zone_name),SQLHelper.insertOpLogQuery(attendanceLog,zone_name,AttendanceLog.table),true)
+        }
+      }
+      Ok("AttendanceLog added to database")
+    }
+    else JsonErrorAction(request.user.username+" is not belonged to the "+zone_name)
+  }*/
+
   val delete = Action {
     NotImplemented
   }

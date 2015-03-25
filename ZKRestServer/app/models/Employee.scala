@@ -1,11 +1,12 @@
 package models
 
 import anorm.SqlParser._
-import anorm.{NotAssigned, Pk, RowParser, _}
+import anorm.{NotAssigned, RowParser, _}
+import play.api.Logger
 import play.api.Play.current
 import play.api.db._
 import utils.Conversion.pkToLong
-import utils.{HashFactory, LoginCombinationHelper}
+import utils.{SQLHelper, HashFactory, LoginCombinationHelper}
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable._
@@ -13,7 +14,6 @@ import scala.collection.mutable._
 
 case class Employee(
                      _id: Pk[Long] = NotAssigned,
-
                      first_name: String = "unknown name",
                      last_name: Option[String] = Option(""),
                      pin: String = "unknown pin",
@@ -77,23 +77,6 @@ object Employee extends EntityCompanion[Employee] {
     )
   }
 
-  val tableName = "employee"
-
-  //TODO gmerino: this enables SQL injection and should be fixed, solution proposals can be found here:
-  // http://stackoverflow.com/questions/29028122/best-way-to-pass-the-schema-name-as-a-variable-to-a-query
-  /**
-   * Retrieves the basic query to get employee data. This information can be parsed with simpleParser
-   * @param zoneName
-   * @return
-   */
-  private def getEmployeeDefaultQuery(zoneName: String) : String =
-    """
-       SELECT em.*, en.enabled  as enabled, eg.name as department
-       FROM """+zoneName+""".employee em,  """+zoneName+""".entity en,  """+zoneName+""".entity_group eg,  """+zoneName+""".entity_hierarchy eh
-       WHERE em._id = en._id
-       AND em._id = eh.id_entity
-       AND eg._id = eh.id_parent
-    """
 
   val simpleParser: RowParser[Employee] = {
     get[Pk[Long]]("employee._id") ~
@@ -122,6 +105,24 @@ object Employee extends EntityCompanion[Employee] {
 
 
   /**
+   * Retrieves the basic query to get employee data. This information can be parsed with simpleParser
+   * @param zoneName
+   * @return
+   */
+  private def getEmployeeDefaultQuery(zoneName: String): String =
+    """
+       SELECT em.*, en.enabled  as enabled, eg.name as department
+       FROM """ + validateZoneName(zoneName) + """.employee em,  """ + validateZoneName(zoneName) + """.entity en,  """ + validateZoneName(zoneName) + """.entity_group eg,  """ + validateZoneName(zoneName) + """.entity_hierarchy eh
+       WHERE em._id = en._id
+       AND em._id = eh.id_entity
+       AND eg._id = eh.id_parent """
+
+  /* TODO gmerino: this enables SQL injection and should be fixed, solution proposals can be found here:
+   http://stackoverflow.com/questions/29028122/best-way-to-pass-the-schema-name-as-a-variable-to-a-query */
+  private def validateZoneName(zoneName: String): String = zoneName
+
+
+  /**
    * Retrieves an employee
    * @param zoneName
    * @param _id
@@ -130,7 +131,7 @@ object Employee extends EntityCompanion[Employee] {
   def getById(zoneName: String, _id: Long): Option[Employee] = {
     DB.withConnection { implicit connection =>
       SQL(
-        getEmployeeDefaultQuery(zoneName)+" AND em._id = {_id}"
+        getEmployeeDefaultQuery(zoneName) + " AND em._id = {_id}"
       ).on(
           '_id -> _id
         ).as(simpleParser.singleOpt)
@@ -243,8 +244,68 @@ object Employee extends EntityCompanion[Employee] {
    */
   def getEmployeeList(zoneName: String): List[Employee] /*:Seq[Employee]*/ = {
     DB.withConnection { implicit connection =>
-      SQL(  getEmployeeDefaultQuery(zoneName)+" ORDER BY pin").as(simpleParser *)
+      SQL(getEmployeeDefaultQuery(zoneName) + " ORDER BY pin").as(simpleParser *)
     }
+  }
+
+  def updateEmployee(zoneName: String, employee: Employee): Boolean = {
+    DB.withConnection { implicit connection =>
+
+      var auxEnabled = 1
+
+      employee.enabled match {
+        case Some(true) => auxEnabled = 1
+        case Some(false) => auxEnabled = 0
+        case None => auxEnabled = -1
+      }
+      if (auxEnabled > 0) {
+        SQL(
+          """
+          UPDATE """.stripMargin + validateZoneName(zoneName) + """.entity
+          SET
+          enabled = {enabled}
+          WHERE _id = {_id}""").on(
+            '_id -> employee._id.get,
+            'enabled -> auxEnabled
+          ).executeUpdate()
+      }
+
+      Logger.info("Antes de ejecutar el update for Mr "+employee.last_name.get)
+      SQL(
+        """
+          UPDATE """ + validateZoneName(zoneName) + """.employee
+          SET
+          first_name = {first_name},
+          last_name = {last_name},
+          pin = {pin},
+          birth_date = {birth_date},
+          address = {address},
+          gender = {gender},
+          phone = {phone},
+          email = {email},
+          photo = {photo},
+          national_id = {national_id}
+          WHERE _id = {_id}""").on(
+          SQLHelper.namedParameters(SQLHelper.generateMap(employee)):_*
+//          '_id -> employee._id.getOrElse(0),
+//          'first_name -> employee.first_name,
+//          'last_name -> employee.last_name.get,
+//          'pin -> employee.pin,
+//          'birth_date -> employee.birth_date.get,
+//          'address -> employee.address.get,
+//          'gender -> employee.gender.get,
+//          'phone -> employee.phone.get,
+//          'email -> employee.email.get,
+//          'photo -> employee.photo.get,
+//          'national_id -> employee.national_id.get
+        ).executeUpdate()
+
+
+      Logger.info("Despues de ejecutar el update")
+      //TODO Department
+      true
+    }
+
   }
 
 }

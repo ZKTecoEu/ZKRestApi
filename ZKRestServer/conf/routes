@@ -59,7 +59,7 @@ GET            /:zone_name/br/employee/          controllers.br.Employees.get(zo
 # Create
 #POST           /employee/:zone_name/           controllers.br.Employees.details(id: Long)
 # Update
-#PUT            /employee/:zone_name/:id        controllers.br.Employees.details(id: Long)
+PUT            /:zone_name/br/employee/       controllers.br.Employees.update(zone_name: String)
 # Delete
 #DELETE         /employee/:zone_name/:id        controllers.br.Employees.details(id: Long)
 # Validate

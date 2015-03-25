@@ -28,19 +28,6 @@ object EmployeeFormatter {
       ))
     }
 
-    /*implicit val employeeRead = (
-      (__ \ "_id").read[Pk[Long]] and
-      (__ \ "first_name").read[String] and
-      (__ \ "last_name").read[String] and
-      (__ \ "pin").read[String] and
-      (__ \ "birth_date").read[Long] and
-      (__ \ "address").read[String] and
-      (__ \ "gender").read[Int] and
-      (__ \ "phone").read[String] and
-      (__ \ "email").read[String] and
-      (__ \ "photo").read[String] and
-      (__ \ "national_id").read[String]
-      )(Employee)*/
 
     def reads(j: JsValue): JsResult[Employee] = JsSuccess({
       Employee.fromParser(

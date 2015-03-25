@@ -1,9 +1,7 @@
 package utils
 
-import java.util.Date
 import java.text.SimpleDateFormat
-
-import play.Logger
+import java.util.Date
 
 import anorm.Pk
 
@@ -43,8 +41,8 @@ object Conversion {
     ).contains(v.toLowerCase)
   }
 
-  def pkToLong(pk: Pk[Long]) = {
-    pk.map(_id=>_id).getOrElse(0L)
+  def pkToLong(id: Pk[Long]) = {
+    id.map(_id=>_id).getOrElse(0L)
   }
 
   def fkToLong(entity: Option[models.Entity]): Long = {

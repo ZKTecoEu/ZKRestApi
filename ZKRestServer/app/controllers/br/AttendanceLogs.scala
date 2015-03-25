@@ -8,7 +8,7 @@ import utils.{JsonErrorAction, SQLHelper, DBHelper}
 import formatters.AttendanceLogFormatter._
 
 /**
- * Created by alper on 28/11/14.
+ * @author alper
  */
 @Api(value = "/br/attendancelog" , description = "Attendance Log Operations")
 object AttendanceLogs extends Controller {
