@@ -54,7 +54,7 @@ object SQLHelper {
     val r = currentMirror.reflect(any)
     r.symbol.typeSignature.members.toStream
       .collect { case s: TermSymbol if !s.isMethod => r.reflectField(s) }
-      .map(r => r.symbol.name.toString.trim -> findvalue(r.get))
+      .map(r => r.symbol.name.toString.trim -> findValue(r.get))
       .toMap
   }
 
@@ -63,7 +63,9 @@ object SQLHelper {
    * @param r
    * @return Any
    */
-  def findvalue(r: Any): Any = r match {
+  def findValue(r: Any): Any = r match {
+    case Some(x) => findValue(x)
+    case None => "null"
     case _: String => r.toString
     case _: Int => r.toString.toInt
     case _: Long => r.toString.toLong

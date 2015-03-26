@@ -6,7 +6,7 @@ import play.api.Logger
 import play.api.Play.current
 import play.api.db._
 import utils.Conversion.pkToLong
-import utils.{SQLHelper, HashFactory, LoginCombinationHelper}
+import utils.{HashFactory, LoginCombinationHelper, SQLHelper}
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable._
@@ -270,7 +270,7 @@ object Employee extends EntityCompanion[Employee] {
           ).executeUpdate()
       }
 
-      Logger.info("Antes de ejecutar el update for Mr "+employee.last_name.get)
+      Logger.info("Antes de ejecutar el update for Mr " + employee.last_name.get)
       SQL(
         """
           UPDATE """ + validateZoneName(zoneName) + """.employee
@@ -286,18 +286,17 @@ object Employee extends EntityCompanion[Employee] {
           photo = {photo},
           national_id = {national_id}
           WHERE _id = {_id}""").on(
-          SQLHelper.namedParameters(SQLHelper.generateMap(employee)):_*
-//          '_id -> employee._id.getOrElse(0),
-//          'first_name -> employee.first_name,
-//          'last_name -> employee.last_name.get,
-//          'pin -> employee.pin,
-//          'birth_date -> employee.birth_date.get,
-//          'address -> employee.address.get,
-//          'gender -> employee.gender.get,
-//          'phone -> employee.phone.get,
-//          'email -> employee.email.get,
-//          'photo -> employee.photo.get,
-//          'national_id -> employee.national_id.get
+          '_id -> SQLHelper.getParameterValue(employee._id.getOrElse(0)),
+          'first_name -> SQLHelper.getParameterValue(employee.first_name),
+          'last_name -> SQLHelper.getParameterValue(employee.last_name.getOrElse(0)),
+          'pin -> SQLHelper.getParameterValue(employee.pin),
+          'birth_date -> SQLHelper.getParameterValue(employee.birth_date.getOrElse(0)),
+          'address -> SQLHelper.getParameterValue(employee.address.getOrElse("")),
+          'gender -> SQLHelper.getParameterValue(employee.gender.getOrElse("")),
+          'phone -> SQLHelper.getParameterValue(employee.phone.getOrElse("")),
+          'email -> SQLHelper.getParameterValue(employee.email.getOrElse("")),
+          'photo -> SQLHelper.getParameterValue(employee.photo.getOrElse("")),
+          'national_id -> SQLHelper.getParameterValue(employee.national_id.getOrElse(""))
         ).executeUpdate()
 
 
