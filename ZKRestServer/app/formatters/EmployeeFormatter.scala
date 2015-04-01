@@ -12,7 +12,7 @@ object EmployeeFormatter {
 
     def writes(o: Employee): JsValue = {
       toJson(Map(
-        "_id" -> toJson(o._id),
+        "_id" -> toJson(o._id.toString),
         "first_name" -> toJson(o.first_name),
         "last_name" -> toJson(o.last_name),
         "pin" -> toJson(o.pin),
@@ -31,7 +31,7 @@ object EmployeeFormatter {
 
     def reads(j: JsValue): JsResult[Employee] = JsSuccess({
       Employee.fromParser(
-        _id = (j \ "_id").as[Option[Pk[Long]]].getOrElse(NotAssigned),
+        _id = (j \ "_id").as[String],
         first_name = (j \ "first_name").as[Option[String]].getOrElse("unkown name"),
         last_name = (j \ "last_name").as[Option[String]],
         pin = (j \ "pin").as[Option[String]].getOrElse("unkonwn pin"),

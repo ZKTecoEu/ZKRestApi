@@ -13,7 +13,7 @@ import scala.collection.mutable._
 
 
 case class Employee(
-                     _id: Pk[Long] = NotAssigned,
+                     _id: Long,
                      first_name: String = "unknown name",
                      last_name: Option[String] = Option(""),
                      pin: String = "unknown pin",
@@ -26,27 +26,11 @@ case class Employee(
                      national_id: Option[String] = Option(""),
                      department: Option[String] = Option(""),
                      enabled: Option[Boolean] = Option(true)
-                     ) extends Entity {
-  def asSeq(): Seq[(String, Any)] = Seq(
-    "_id" -> pkToLong(_id),
-    "first_name" -> first_name,
-    "last_name" -> last_name,
-    "pin" -> pin,
-    "birth_date" -> birth_date,
-    "address" -> address,
-    "gender" -> gender,
-    "phone" -> phone,
-    "email" -> email,
-    "photo" -> photo,
-    "national_id" -> national_id,
-    "department" -> department,
-    "enabled" -> enabled
-  )
-}
+                     )
 
-object Employee extends EntityCompanion[Employee] {
+object Employee {
   def fromParser(
-                  _id: Pk[Long] = NotAssigned,
+                  _id: String ,
                   first_name: String = "unknown employee",
                   last_name: Option[String] = Option(""),
                   pin: String = "",
@@ -61,7 +45,7 @@ object Employee extends EntityCompanion[Employee] {
                   enabled: Option[Boolean] = Option(true)
                   ): Employee = {
     new Employee(
-      _id,
+      _id.toLong,
       first_name,
       last_name,
       pin,
@@ -79,7 +63,7 @@ object Employee extends EntityCompanion[Employee] {
 
 
   val simpleParser: RowParser[Employee] = {
-    get[Pk[Long]]("employee._id") ~
+    get[Long]("employee._id") ~
       get[String]("employee.first_name") ~
       get[Option[String]]("employee.last_name") ~
       get[String]("employee.pin") ~
@@ -94,7 +78,7 @@ object Employee extends EntityCompanion[Employee] {
       get[Option[Int]]("enabled") map {
       case _id ~ first_name ~ last_name ~ pin ~ birth_date ~ address ~ gender
         ~ phone ~ email ~ photo ~ national_id ~ department ~ enabled => fromParser(
-        _id, first_name, last_name, pin, birth_date, address, gender, phone, email
+        _id.toString, first_name, last_name, pin, birth_date, address, gender, phone, email
         , photo, national_id, department, enabled match {
           case Some(enabled) => Option(enabled == 1)
           case None => Option(false)
@@ -265,7 +249,7 @@ object Employee extends EntityCompanion[Employee] {
           SET
           enabled = {enabled}
           WHERE _id = {_id}""").on(
-            '_id -> employee._id.get,
+            '_id -> employee._id,
             'enabled -> auxEnabled
           ).executeUpdate()
       }
@@ -286,17 +270,17 @@ object Employee extends EntityCompanion[Employee] {
           photo = {photo},
           national_id = {national_id}
           WHERE _id = {_id}""").on(
-          '_id -> SQLHelper.getParameterValue(employee._id.getOrElse(0)),
-          'first_name -> SQLHelper.getParameterValue(employee.first_name),
-          'last_name -> SQLHelper.getParameterValue(employee.last_name.getOrElse(0)),
-          'pin -> SQLHelper.getParameterValue(employee.pin),
-          'birth_date -> SQLHelper.getParameterValue(employee.birth_date.getOrElse(0)),
-          'address -> SQLHelper.getParameterValue(employee.address.getOrElse("")),
-          'gender -> SQLHelper.getParameterValue(employee.gender.getOrElse("")),
-          'phone -> SQLHelper.getParameterValue(employee.phone.getOrElse("")),
-          'email -> SQLHelper.getParameterValue(employee.email.getOrElse("")),
-          'photo -> SQLHelper.getParameterValue(employee.photo.getOrElse("")),
-          'national_id -> SQLHelper.getParameterValue(employee.national_id.getOrElse(""))
+          '_id -> employee._id,
+          'first_name -> employee.first_name,
+          'last_name -> employee.last_name.orNull,
+          'pin -> employee.pin,
+          'birth_date -> employee.birth_date.getOrElse(0l),
+          'address -> employee.address.getOrElse(""),
+          'gender -> employee.gender.getOrElse(0),
+          'phone -> employee.phone.getOrElse(""),
+          'email -> employee.email.getOrElse(""),
+          'photo -> employee.photo.getOrElse(""),
+          'national_id -> employee.national_id.getOrElse("")
         ).executeUpdate()
 
 

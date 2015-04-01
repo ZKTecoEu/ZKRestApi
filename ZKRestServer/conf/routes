@@ -55,11 +55,11 @@ GET            /api-docs/br/employee             controllers.ApiHelpController.g
 
 # Get Employee
 GET            /:zone_name/br/employee/:id       controllers.br.Employees.getEmployee(zone_name:String, id: Long)
-GET            /:zone_name/br/employee/          controllers.br.Employees.get(zone_name:String)
+GET            /:zone_name/br/employee           controllers.br.Employees.get(zone_name:String)
 # Create
 #POST           /employee/:zone_name/           controllers.br.Employees.details(id: Long)
 # Update
-PUT            /:zone_name/br/employee/       controllers.br.Employees.update(zone_name: String)
+PUT            /:zone_name/br/employee          controllers.br.Employees.update(zone_name: String)
 # Delete
 #DELETE         /employee/:zone_name/:id        controllers.br.Employees.details(id: Long)
 # Validate
