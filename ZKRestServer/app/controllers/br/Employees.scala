@@ -54,6 +54,27 @@ object Employees extends Controller {
     Ok("Updated")
   }
 
+  def updatePhoto(zoneName: String) = AuthenticatedZone(zoneName) { request =>
+    Logger.info("Entrada ")
+
+    request.body match {
+      case AnyContentAsJson(json) => Logger.info("json is "+json)
+      case _ => Logger.info("body is none")
+    }
+
+    request.body.asJson.map { json =>
+      Logger.info("body as json ")
+      json.asOpt[Employee].map {employee =>
+        Logger.info("json as opt ")
+        Employee.updateEmployeePhoto(zoneName, employee)
+        //TODO ZKProto
+        Logger.info("Updated ")
+        Ok("Updated Dentro")
+      }
+    }
+    Ok("Updated")
+  }
+
   /*
   * def insertAttendanceLog(zone_name:String) = Authenticated { request =>
     if(User.findAllZoneName(request.user._id).contains(zone_name)){

@@ -232,6 +232,20 @@ object Employee {
     }
   }
 
+  def updateEmployeePhoto(zoneName: String, employee: Employee) = {
+    DB.withConnection { implicit connection =>
+      SQL(
+        """
+          UPDATE """ + validateZoneName(zoneName) + """.employee
+          SET
+          photo = {photo}
+          WHERE _id = {_id}""").on(
+          '_id -> employee._id,
+          'photo -> employee.photo.getOrElse("")
+        ).executeUpdate()
+    }
+  }
+
   def updateEmployee(zoneName: String, employee: Employee): Boolean = {
     DB.withConnection { implicit connection =>
 
@@ -242,10 +256,10 @@ object Employee {
         case Some(false) => auxEnabled = 0
         case None => auxEnabled = -1
       }
-      if (auxEnabled > 0) {
+      if (auxEnabled >= 0) {
         SQL(
           """
-          UPDATE """.stripMargin + validateZoneName(zoneName) + """.entity
+          UPDATE """ + validateZoneName(zoneName) + """.entity
           SET
           enabled = {enabled}
           WHERE _id = {_id}""").on(
@@ -254,7 +268,7 @@ object Employee {
           ).executeUpdate()
       }
 
-      Logger.info("Antes de ejecutar el update for Mr " + employee.last_name.get)
+//      Logger.info("Antes de ejecutar el update for Mr " + employee.last_name.get)
       SQL(
         """
           UPDATE """ + validateZoneName(zoneName) + """.employee

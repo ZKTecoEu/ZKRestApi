@@ -1,46 +1,46 @@
 # Routes
 # This file defines all application routes (Higher priority routes first)
 # ~~~~
-OPTIONS        /*url                             controllers.Application.options(url: String)
+OPTIONS        /*url                                   controllers.Application.options(url: String)
 
 # Swagger - Root Rosources Listing
-GET            /api-docs                         controllers.ApiHelpController.getResources
+GET            /api-docs                               controllers.ApiHelpController.getResources
 
 # Home page
-GET            /index                            controllers.Application.index
-GET            /                                 controllers.Security.login
-GET            /login                            controllers.Security.login
-GET            /logout                           controllers.Security.logout
-GET            /help                             controllers.Application.swagger
+GET            /index                                  controllers.Application.index
+GET            /                                       controllers.Security.login
+GET            /login                                  controllers.Security.login
+GET            /logout                                 controllers.Security.logout
+GET            /help                                   controllers.Application.swagger
 
 #Javascript Routes
-GET            /javascriptRoutes                 controllers.JavascriptRoute.javascriptRoutes
+GET            /javascriptRoutes                       controllers.JavascriptRoute.javascriptRoutes
 
 # Settings page
-GET            /settings                         controllers.Application.setting
-GET            /createClient                     controllers.Application.createClient
-POST           /createClient                     controllers.Application.addClientoDB
-POST           /clients/:id                      controllers.Application.removeClient(id:Long)
-GET            /createUser                       controllers.Application.addUser
-POST           /createUser                       controllers.Application.addUsertoDB
-POST           /users/:id                        controllers.Application.removeUser(id:Long)
-GET            /users                            controllers.Application.users
-GET            /clients                          controllers.Application.clients
+GET            /settings                               controllers.Application.setting
+GET            /createClient                           controllers.Application.createClient
+POST           /createClient                           controllers.Application.addClientoDB
+POST           /clients/:id                            controllers.Application.removeClient(id:Long)
+GET            /createUser                             controllers.Application.addUser
+POST           /createUser                             controllers.Application.addUsertoDB
+POST           /users/:id                              controllers.Application.removeUser(id:Long)
+GET            /users                                  controllers.Application.users
+GET            /clients                                controllers.Application.clients
 
 # Get user's zone list
-GET            /user/zones                       controllers.Application.zones
+GET            /user/zones                             controllers.Application.zones
 
 # Map static resources from the /public folder to the /assets URL path
-GET            /assets/*file                     controllers.Assets.at(path="/public", file)
-GET            /favicon.ico                      controllers.Assets.at(path="/public", file="favicon.ico")
+GET            /assets/*file                           controllers.Assets.at(path="/public", file)
+GET            /favicon.ico                            controllers.Assets.at(path="/public", file="favicon.ico")
 
 # Test for get request
-GET            /echo/:name                       controllers.Application.name(name: String)
+GET            /echo/:name                             controllers.Application.name(name: String)
 
-GET            /api-docs/oauth2                  controllers.ApiHelpController.getResource(path = "/oauth2")
+GET            /api-docs/oauth2                        controllers.ApiHelpController.getResource(path = "/oauth2")
 
 # Authorization request
-POST           /oauth2/access_token              controllers.Security.accessToken
+POST           /oauth2/access_token                    controllers.Security.accessToken
 
 
 
@@ -51,43 +51,44 @@ POST           /oauth2/access_token              controllers.Security.accessToke
 
 # ##### Employee #####
 
-GET            /api-docs/br/employee             controllers.ApiHelpController.getResource(path = "/br/employee")
+GET            /api-docs/br/employee                   controllers.ApiHelpController.getResource(path = "/br/employee")
 
 # Get Employee
-GET            /:zone_name/br/employee/:id       controllers.br.Employees.getEmployee(zone_name:String, id: Long)
-GET            /:zone_name/br/employee           controllers.br.Employees.get(zone_name:String)
+GET            /:zone_name/br/employee/:id             controllers.br.Employees.getEmployee(zone_name:String, id: Long)
+GET            /:zone_name/br/employee                 controllers.br.Employees.get(zone_name:String)
 # Create
 #POST           /employee/:zone_name/           controllers.br.Employees.details(id: Long)
 # Update
-PUT            /:zone_name/br/employee          controllers.br.Employees.update(zone_name: String)
+PUT            /:zone_name/br/employee                 controllers.br.Employees.update(zone_name: String)
+PUT            /:zone_name/br/employeePhoto            controllers.br.Employees.updatePhoto(zone_name: String)
 # Delete
 #DELETE         /employee/:zone_name/:id        controllers.br.Employees.details(id: Long)
 # Validate
-POST           /:zone_name/br/employee/validate  controllers.br.Employees.validate(zone_name:String)
+POST           /:zone_name/br/employee/validate        controllers.br.Employees.validate(zone_name:String)
 
-GET            /api-docs/br/attendancelog        controllers.ApiHelpController.getResource(path = "/br/attendancelog")
+GET            /api-docs/br/attendancelog              controllers.ApiHelpController.getResource(path = "/br/attendancelog")
 
 # Insert attendance log to ZKProto
-POST           /:zone_name/br/attendancelog      controllers.br.AttendanceLogs.insertAttendanceLog(zone_name:String)
+POST           /:zone_name/br/attendancelog            controllers.br.AttendanceLogs.insertAttendanceLog(zone_name:String)
 
-GET            /api-docs/br/query                controllers.ApiHelpController.getResource(path = "/br/query")
+GET            /api-docs/br/query                      controllers.ApiHelpController.getResource(path = "/br/query")
 
 # Custom Query without parameter
-GET            /:zone_name/br/query/:query_name  controllers.br.CustomQueries.queryWithoutParams(zone_name:String, query_name:String)
+GET            /:zone_name/br/query/:query_name        controllers.br.CustomQueries.queryWithoutParams(zone_name:String, query_name:String)
 
 # Custom Query with parameters
-POST           /:zone_name/br/query/:query_name  controllers.br.CustomQueries.queryWithParams(zone_name:String, query_name:String)
+POST           /:zone_name/br/query/:query_name        controllers.br.CustomQueries.queryWithParams(zone_name:String, query_name:String)
 
 ##################
 #NON BUSINESS RELATED
 ##################
 
-GET            /api-docs/data                    controllers.ApiHelpController.getResource(path = "/data")
+GET            /api-docs/data                          controllers.ApiHelpController.getResource(path = "/data")
 
 # Get all data
-GET            /:zone_name/data/:table_name      controllers.nbr.Data.showAll(zone_name:String, table_name: String)
+GET            /:zone_name/data/:table_name            controllers.nbr.Data.showAll(zone_name:String, table_name: String)
 # Raw data access
-GET            /:zone_name/data/:table_name/:id  controllers.nbr.Data.show(zone_name:String, table_name :String,id: Long)
+GET            /:zone_name/data/:table_name/:id        controllers.nbr.Data.show(zone_name:String, table_name :String,id: Long)
 
 
 
