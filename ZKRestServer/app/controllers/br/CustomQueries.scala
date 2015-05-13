@@ -3,7 +3,7 @@ package controllers.br
 import javax.ws.rs.PathParam
 
 import com.wordnik.swagger.annotations.{ApiParam, ApiOperation, Api}
-import controllers.ActionBuilders.Authenticated
+import controllers.ActionBuilders.AuthenticatedZone
 import models.User
 import play.api.libs.json.JsArray
 import play.api.mvc.Controller
@@ -20,8 +20,7 @@ object CustomQueries extends Controller {
     notes = "Executes query according to parameters and responses result." +
       "Because of not being a static data model,you need to send parameters according to your query's requirements." +
       "You should send your parameters in x-www-form-urlencoded format." ,httpMethod = "POST" , response = classOf[Object])
-  def queryWithParams(zone_name:String, @ApiParam(value = "Name of query") @PathParam("query_name") query_name: String) = Authenticated { request =>
-    if(User.findAllZoneName(request.user._id).contains(zone_name)) {
+  def queryWithParams(zone_name:String, @ApiParam(value = "Name of query") @PathParam("query_name") query_name: String) = AuthenticatedZone(zone_name) { request =>
       var map: Map[String, Any] = Map()
       request.body.asFormUrlEncoded.get foreach {
         case (key, value) => value(0).toLongOpt.isInstanceOf[Some[Long]] match {
@@ -38,13 +37,11 @@ object CustomQueries extends Controller {
       val dataMap = NamedParameterHelper.getMapOfNamedArguments(map, query)
       val jsonList = DBHelper.executeQueryWithParams(query.query, zone_name, dataMap)
       Ok(new JsArray(scala.collection.mutable.ArraySeq(jsonList: _*)))
-    }
-    else JsonErrorAction(request.user.username+" is not belonged to the "+zone_name)
   }
 
   @ApiOperation(nickname = "executeQueryWithoutParam" , value = "Execute query without parameter" ,
     notes =  "Executes query and responses result", httpMethod = "GET" , response = classOf[Object])
-  def queryWithoutParams(zone_name:String, @ApiParam(value = "Name of query") @PathParam("query_name") query_name: String) = Authenticated { request =>
+  def queryWithoutParams(zone_name:String, @ApiParam(value = "Name of query") @PathParam("query_name") query_name: String) = AuthenticatedZone(zone_name) { request =>
       //val zone_name = User.findZoneName(request.user._id)
     if(User.findAllZoneName(request.user._id).contains(zone_name)) {
       val query = CustomQueriesGenerator.queryMap.getOrElse(query_name, "not found")

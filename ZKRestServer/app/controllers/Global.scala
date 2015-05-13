@@ -2,7 +2,7 @@ package controllers
 
 import filters.CorsFilter
 import play.api._
-import play.api.mvc.EssentialAction
+import play.api.mvc.{RequestHeader, EssentialAction}
 import utils.CustomQueriesGenerator
 
 object Global extends GlobalSettings {

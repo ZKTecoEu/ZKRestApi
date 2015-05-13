@@ -37,19 +37,19 @@ object LoginCombinationHelper {
      var value = 0
 
     if (!login.pin.isEmpty) {
-      value += PIN_WEIGHT;
+      value += PIN_WEIGHT
     }
 
     if (!login.fp.isEmpty) {
-      value += FINGERPRINT_WEIGHT;
+      value += FINGERPRINT_WEIGHT
     }
 
     if (!login.pwd.isEmpty) {
-      value += PASSWORD_WEIGHT;
+      value += PASSWORD_WEIGHT
     }
 
     if (!login.card.isEmpty) {
-      value += CARD_WEIGHT;
+      value += CARD_WEIGHT
     }
 
     if (!login.face.isEmpty) {

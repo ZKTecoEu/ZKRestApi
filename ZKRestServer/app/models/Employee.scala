@@ -123,7 +123,7 @@ object Employee {
   }
 
   def checkData(zoneName: String, login: LoginCombination): Option[Employee] = {
-    val empId = findEmployeeId(login.pin, zoneName)
+    val empId = findEmployeeId(zoneName,login.pin)
     var employee: Option[Employee] = null
     if (isEnabled(zoneName, empId)) {
       if (checkEmployeeLogin(zoneName, login, empId)) {

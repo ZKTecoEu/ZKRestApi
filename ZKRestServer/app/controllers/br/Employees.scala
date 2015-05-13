@@ -103,8 +103,7 @@ object Employees extends Controller {
   @ApiOperation(nickname = "validateEmployee", value = "Validate employee", notes = "Checks employee login combination is defined or not." +
     "You can check response class section in order to find out which values need to be sent in a json object.",
     httpMethod = "POST", response = classOf[models.LoginCombination])
-  def validate(zone_name: String) = Authenticated { request =>
-    if (User.findAllZoneName(request.user._id).contains(zone_name)) {
+  def validate(zone_name: String) = AuthenticatedZone(zone_name) { request =>
       var result: JsValue = null
       request.body.asJson.map { json =>
         json.asOpt[LoginCombination].map { loginCombination =>
@@ -112,8 +111,6 @@ object Employees extends Controller {
         }
       }
       Ok(result)
-    }
-    else JsonErrorAction(request.user.username + " is not belonged to the " + zone_name)
   }
 
   /**

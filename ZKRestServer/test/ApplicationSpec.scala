@@ -1,8 +1,7 @@
-
-
 import controllers.br.CustomQueries
 import formatters.AttendanceLogFormatter
 import models.AttendanceLog
+import org.joda.time.DateTime
 import org.specs2.mutable._
 import org.specs2.runner._
 import org.junit.runner._
@@ -16,6 +15,7 @@ import formatters.UserFormatter.JsonUserFormatter
 import utils.{CustomQueriesGenerator, NamedParameterHelper}
 
 import scala.concurrent.Future
+import scala.util.Random
 
 /**
  * Add your spec here.
@@ -45,7 +45,7 @@ class ApplicationSpec extends PlaySpecification {
         "face" -> JsString("")
       )
 
-      val req = FakeRequest(POST,"/br/employee/validate").withBody(json).
+      val req = FakeRequest(POST,"/limbo/br/employee/validate").withBody(json).
         withHeaders(HeaderNames.AUTHORIZATION->access_token,HeaderNames.CONTENT_TYPE -> "application/json")
 
       val result = route(req).get
@@ -56,7 +56,7 @@ class ApplicationSpec extends PlaySpecification {
     }
 
     "User details" in new WithApplication {
-        val req = FakeRequest(GET,"/br/employee/1").
+        val req = FakeRequest(GET,"/limbo/br/employee/1").
           withHeaders(HeaderNames.AUTHORIZATION->access_token)
 
         val result = route(req).get
@@ -68,8 +68,8 @@ class ApplicationSpec extends PlaySpecification {
 
     //TODO:After test delete added data!
     "Attendance Log insertion" in new WithApplication{
-        val req = FakeRequest(POST,"/br/attendancelog").withBody(AttendanceLogFormatter.JsonAttendanceLogFormatter.writes(
-          new AttendanceLog(123456789,1,1,3,123123,1,"Work Time",0,"Alper's ZPAD"))).
+        val req = FakeRequest(POST,"/limbo/br/attendancelog").withBody(AttendanceLogFormatter.JsonAttendanceLogFormatter.writes(
+          new AttendanceLog(Random.nextLong(),1,1,3,DateTime.now().getMillis,1,"Work Time",0,"Alper's ZPAD"))).
           withHeaders(HeaderNames.AUTHORIZATION->access_token)
 
         val result = route(req).get
